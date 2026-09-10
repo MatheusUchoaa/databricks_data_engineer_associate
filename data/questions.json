@@ -1,0 +1,3018 @@
+[
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira precisa ingerir continuamente arquivos JSON que chegam a um container do ADLS, com o schema podendo ganhar colunas novas. Ela quer que o Auto Loader detecte e evolua o schema automaticamente. Qual opcao e obrigatoria para habilitar inferencia e evolucao de schema?",
+    "opts": [
+      "cloudFiles.format como \"delta\"",
+      "cloudFiles.schemaLocation apontando para um diretorio",
+      "cloudFiles.inferColumnTypes como false",
+      "mergeSchema como true no writeStream"
+    ],
+    "c": 1,
+    "expl": "Especificar um diretorio em cloudFiles.schemaLocation e o que habilita inferencia e evolucao de schema no Auto Loader - esse diretorio rastreia o schema ao longo do tempo. Delta nao e source valida; inferColumnTypes=false desabilitaria a inferencia de tipos; mergeSchema e opcao de escrita Delta.",
+    "src": "Docs: Configure schema inference and evolution in Auto Loader"
+  },
+  {
+    "dom": "dev",
+    "stem": "No modo padrao addNewColumns, um novo campo aparece nos arquivos de origem de um stream Auto Loader. O que acontece?",
+    "opts": [
+      "O stream ignora silenciosamente a nova coluna",
+      "O stream falha com UnknownFieldException; ao reiniciar, a coluna e adicionada ao schema",
+      "A coluna vai apenas para _rescued_data e o stream segue",
+      "O pipeline reescreve todos os dados historicos"
+    ],
+    "c": 1,
+    "expl": "Em addNewColumns (padrao sem schema fornecido), o Auto Loader detecta a coluna nova, atualiza o schema location e faz o stream falhar com UnknownFieldException. Ao reiniciar, continua com o schema atualizado - por isso recomenda-se restart automatico via Lakeflow Jobs.",
+    "src": "Docs: Auto Loader schema evolution modes"
+  },
+  {
+    "dom": "dev",
+    "stem": "Para onde vao, no Auto Loader, os dados que nao correspondem ao schema esperado, de forma que possam ser inspecionados depois?",
+    "opts": [
+      "Sao descartados permanentemente",
+      "Para _corrupt_record criada pelo Spark",
+      "Para a coluna _rescued_data",
+      "Para um arquivo de log no checkpoint"
+    ],
+    "c": 2,
+    "expl": "O Auto Loader adiciona automaticamente _rescued_data ao schema. Dados inesperados (tipos divergentes, colunas novas em modo rescue) sao resgatados nessa coluna como blob JSON. _corrupt_record e do leitor generico do Spark.",
+    "src": "Docs: Auto Loader rescued data column"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira quer que o Auto Loader infira os tipos das colunas de arquivos CSV (int, timestamp) em vez de tratar tudo como string. Qual configuracao usar?",
+    "opts": [
+      ".option(\"cloudFiles.inferColumnTypes\", \"true\")",
+      ".option(\"cloudFiles.schemaEvolutionMode\", \"none\")",
+      ".option(\"header\", \"false\")",
+      ".option(\"cloudFiles.useStrictGlobber\", \"true\")"
+    ],
+    "c": 0,
+    "expl": "Por padrao o Auto Loader infere colunas de JSON/CSV/XML como string. Para inferir tipos com base em amostra, usa-se cloudFiles.inferColumnTypes=true. As demais controlam evolucao, cabecalho e globbing.",
+    "src": "Docs: Auto Loader schema inference (inferColumnTypes)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual descreve um caso de uso valido para o Auto Loader?",
+    "opts": [
+      "Ingerir incrementalmente novos arquivos que chegam em object storage (S3, ADLS, GCS)",
+      "Fazer streaming de eventos diretamente de um topico Kafka",
+      "Executar queries interativas ad-hoc sobre uma tabela Delta",
+      "Replicar mudancas linha a linha de um banco relacional via CDC nativo"
+    ],
+    "c": 0,
+    "expl": "Auto Loader (source cloudFiles) processa incrementalmente arquivos novos que chegam em cloud object storage. Nao le de Kafka diretamente, nao e ferramenta de query interativa, e CDC de bancos e papel do Lakeflow Connect/conectores.",
+    "src": "Exam guide: Classify valid Auto Loader sources and use cases"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira definiu variaveis em Python num notebook config e quer reutiliza-las num notebook etl. Qual recurso permite isso, compartilhando o mesmo contexto?",
+    "opts": [
+      "%run ./config",
+      "%sql",
+      "dbutils.notebook.run(\"config\")",
+      "spark.read()"
+    ],
+    "c": 0,
+    "expl": "%run ./config executa o notebook alvo no mesmo contexto, tornando variaveis e funcoes disponiveis no chamador. dbutils.notebook.run() executa em contexto separado e so retorna um valor.",
+    "src": "Exam guide: Notebooks functionality"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual magic command permite escrever uma celula em SQL dentro de um notebook cuja linguagem padrao e Python?",
+    "opts": [
+      "%md",
+      "%sql",
+      "%fs",
+      "%sh"
+    ],
+    "c": 1,
+    "expl": "%sql muda a linguagem da celula para SQL. %md = Markdown, %fs = comandos de filesystem, %sh = shell.",
+    "src": "Exam guide: Notebooks functionality"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual formato de arquivo nao e suportado pela inferencia/evolucao de schema do Auto Loader?",
+    "opts": [
+      "JSON",
+      "CSV",
+      "ORC",
+      "Avro"
+    ],
+    "c": 2,
+    "expl": "A inferencia/evolucao de schema do Auto Loader suporta JSON, CSV, XML (14.3 LTS+), Avro (10.4 LTS+) e Parquet (11.3 LTS+). ORC e nao suportado para inferencia/evolucao; Text e Binaryfile tem schema fixo.",
+    "src": "Docs: Auto Loader supported formats"
+  },
+  {
+    "dom": "dev",
+    "stem": "No modo de evolucao de schema rescue do Auto Loader, qual e o comportamento ao surgir uma coluna nova?",
+    "opts": [
+      "O stream falha e nao reinicia",
+      "O schema evolui e a coluna e adicionada",
+      "O schema nunca evolui, o stream nao falha, e novas colunas sao registradas em _rescued_data",
+      "Todos os dados sao reescritos"
+    ],
+    "c": 2,
+    "expl": "Em rescue, o schema nunca evolui e o stream nao falha por mudanca de schema; todas as colunas novas sao gravadas na coluna de dados resgatados (_rescued_data).",
+    "src": "Docs: Auto Loader schemaEvolutionMode = rescue"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira quer processar todos os arquivos disponiveis uma unica vez e encerrar o job (comportamento tipo batch), aproveitando a logica incremental do Auto Loader. Qual trigger usar?",
+    "opts": [
+      ".trigger(processingTime=\"5 seconds\")",
+      ".trigger(availableNow=True)",
+      ".trigger(continuous=\"1 second\")",
+      "Nenhum trigger (default)"
+    ],
+    "c": 1,
+    "expl": "trigger(availableNow=True) processa todos os dados disponiveis na origem e entao encerra a query - ideal para execucao \"stream-like\" mas so uma vez (batch/near-real-time agendado).",
+    "src": "Docs: Structured Streaming triggers (availableNow)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao usar Auto Loader com CSV que nao possui linha de cabecalho, o que a engenheira deve configurar?",
+    "opts": [
+      ".option(\"header\", \"false\")",
+      ".option(\"cloudFiles.format\", \"headerless\")",
+      ".option(\"inferSchema\", \"false\")",
+      "Nada; o Auto Loader detecta automaticamente"
+    ],
+    "c": 0,
+    "expl": "O Auto Loader assume que arquivos CSV tem cabecalho por padrao. Se nao tiverem, deve-se passar .option(\"header\", \"false\") para que a primeira linha nao seja tratada como nomes de coluna.",
+    "src": "Docs: Auto Loader schema inference for CSV"
+  },
+  {
+    "dom": "dev",
+    "stem": "Databricks Connect e usado em qual cenario de workflow de engenharia de dados?",
+    "opts": [
+      "Conectar uma IDE local ou aplicacao a um cluster Databricks remoto para executar codigo Spark",
+      "Compartilhar dados com parceiros externos",
+      "Agendar jobs recorrentes",
+      "Aplicar regras de qualidade de dados"
+    ],
+    "c": 0,
+    "expl": "Databricks Connect permite conectar IDEs (VS Code, PyCharm), notebooks ou aplicacoes customizadas a um cluster/serverless Databricks remoto, executando codigo Spark localmente escrito contra o cluster remoto.",
+    "src": "Exam guide: Use Databricks Connect in a data engineering workflow"
+  },
+  {
+    "dom": "dev",
+    "stem": "Um stream Auto Loader parou. A engenheira precisa que ele retome exatamente de onde parou, sem reprocessar dados ja ingeridos. O que garante isso?",
+    "opts": [
+      "A coluna _rescued_data",
+      "O checkpointLocation",
+      "O comando VACUUM",
+      "A opcao overwriteSchema"
+    ],
+    "c": 1,
+    "expl": "O checkpointLocation armazena o progresso (offsets) do stream, garantindo tolerancia a falhas e exactly-once. Ao reiniciar, o stream retoma do ultimo offset commitado, sem reprocessar.",
+    "src": "Docs: Structured Streaming checkpoints"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual das opcoes descreve corretamente o uso de dbutils.widgets em notebooks?",
+    "opts": [
+      "Criar parametros de entrada que podem ser passados ao notebook (ex.: em um job)",
+      "Compartilhar variaveis entre notebooks",
+      "Fazer commit no Git",
+      "Otimizar o layout de tabelas Delta"
+    ],
+    "c": 0,
+    "expl": "dbutils.widgets cria widgets/parametros de entrada (text, dropdown, etc.) que permitem parametrizar notebooks - uteis quando um notebook e chamado por um job com valores diferentes.",
+    "src": "Exam guide: Notebooks functionality (widgets)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira precisa depurar por que um job de notebook falhou. Qual ferramenta integrada do Databricks ajuda a inspecionar o erro e o stack trace da execucao?",
+    "opts": [
+      "A saida da celula e os logs do driver/Spark UI da execucao",
+      "O comando VACUUM",
+      "O Data Explorer",
+      "O Delta Sharing"
+    ],
+    "c": 0,
+    "expl": "Para depurar, usa-se a saida da celula (mensagens de erro/stack trace), os logs do driver e a Spark UI da execucao - ferramentas built-in de troubleshooting. Data Explorer e Delta Sharing nao tem funcao de debug.",
+    "src": "Exam guide: Use Databricks' built-in debugging tools"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre o modo de trigger processingTime em Structured Streaming esta correta?",
+    "opts": [
+      "Processa micro-batches em intervalos fixos de tempo (ex.: a cada 2 minutos)",
+      "Processa tudo uma vez e encerra",
+      "Nunca processa ate o cluster ser reiniciado",
+      "So funciona com sources Delta"
+    ],
+    "c": 0,
+    "expl": "trigger(processingTime=\"2 minutes\") dispara micro-batches em intervalos regulares, independentemente de quando os dados chegam. E diferente de availableNow (uma vez e encerra) e do default (o mais rapido possivel).",
+    "src": "Docs: Structured Streaming triggers (processingTime)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao usar o Auto Loader, cada carga de ingestao a partir de uma origem distinta para uma mesma tabela alvo exige:",
+    "opts": [
+      "Um checkpoint de streaming separado por origem",
+      "O mesmo checkpoint compartilhado",
+      "Nenhum checkpoint",
+      "Um cluster dedicado por origem"
+    ],
+    "c": 0,
+    "expl": "Se ha mais de uma localizacao de origem sendo carregada na mesma tabela alvo, cada workload de ingestao do Auto Loader requer um checkpoint de streaming separado.",
+    "src": "Docs: Auto Loader - separate checkpoint per source"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira quer que o Auto Loader amplie automaticamente tipos (ex.: int->long, float->double) sem reescrever dados nem intervencao manual. Qual modo usar?",
+    "opts": [
+      "addNewColumns",
+      "rescue",
+      "addNewColumnsWithTypeWidening",
+      "failOnNewColumns"
+    ],
+    "c": 2,
+    "expl": "O modo addNewColumnsWithTypeWidening amplia automaticamente tipos (int->long, float->double) sem reescrita de dados. E recurso mais recente (Public Preview em runtimes 16.4+).",
+    "src": "Docs: Automatic type widening with Auto Loader"
+  },
+  {
+    "dom": "dev",
+    "stem": "Como o Auto Loader infere colunas de particao quando os dados estao em storage?",
+    "opts": [
+      "A partir da estrutura de diretorios em estilo Hive (key=value)",
+      "Lendo o conteudo completo de cada arquivo",
+      "Pela ordem de chegada dos arquivos",
+      "Nao infere particoes"
+    ],
+    "c": 0,
+    "expl": "O Auto Loader tenta inferir colunas de particao a partir da estrutura de diretorios subjacente se os dados usam particionamento estilo Hive (pares key=value no caminho).",
+    "src": "Docs: Auto Loader partitions"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a forma correta de iniciar a leitura de um stream com Auto Loader em PySpark?",
+    "opts": [
+      "spark.read.format(\"cloudFiles\")",
+      "spark.readStream.format(\"cloudFiles\")",
+      "spark.stream.format(\"autoloader\")",
+      "spark.readStream.format(\"delta\")"
+    ],
+    "c": 1,
+    "expl": "O Auto Loader usa a source cloudFiles em um readStream: spark.readStream.format(\"cloudFiles\").option(\"cloudFiles.format\", ...). read (batch) nao inicia um stream.",
+    "src": "Docs: Auto Loader syntax"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira precisa carregar um pequeno arquivo de referencia estatico (lookup) uma unica vez, nao continuamente. Qual abordagem e a mais apropriada?",
+    "opts": [
+      "Auto Loader com trigger continuo",
+      "Leitura batch com spark.read.format(...)",
+      "Um pipeline de streaming em modo complete",
+      "Delta Sharing"
+    ],
+    "c": 1,
+    "expl": "Para um arquivo estatico lido uma vez, a leitura batch (spark.read) e apropriada. Auto Loader/streaming se justifica quando ha chegada continua e incremental de arquivos.",
+    "src": "Exam guide: ingestion patterns (batch vs streaming)"
+  },
+  {
+    "dom": "dev",
+    "stem": "O que a opcao cloudFiles.maxFilesPerTrigger controla no Auto Loader?",
+    "opts": [
+      "O numero maximo de novos arquivos processados por micro-batch",
+      "O tamanho do schema location",
+      "O numero de particoes da tabela",
+      "O tempo de retencao do checkpoint"
+    ],
+    "c": 0,
+    "expl": "cloudFiles.maxFilesPerTrigger limita quantos arquivos novos sao processados a cada trigger/micro-batch, ajudando a controlar throughput e uso de recursos.",
+    "src": "Docs: Auto Loader options"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao ler dados JSON aninhados com Auto Loader e schema inferido, como acessar campos dentro de uma estrutura resgatada semiestruturada?",
+    "opts": [
+      "Via APIs de acesso a dados semiestruturados (ex.: notacao : / rescued_data)",
+      "So reescrevendo a tabela",
+      "Com VACUUM",
+      "Nao e possivel acessar"
+    ],
+    "c": 0,
+    "expl": "Dados resgatados/semiestruturados podem ser acessados posteriormente usando as APIs de dados semiestruturados (por exemplo, notacao de dois-pontos para navegar no JSON).",
+    "src": "Docs: semi-structured data access"
+  },
+  {
+    "dom": "dev",
+    "stem": "Databricks Git Folders (antigo Repos) permite principalmente:",
+    "opts": [
+      "Integracao com Git para versionar notebooks, trocar de branch e fazer commits",
+      "Aplicar expectations de qualidade",
+      "Compartilhar dados entre metastores",
+      "Otimizar tabelas Delta"
+    ],
+    "c": 0,
+    "expl": "Databricks Git Folders (antigo Databricks Repos) integra o workspace a repositorios Git - clonar, trocar de branch, commit/push/pull - habilitando controle de versao e CI/CD para o codigo.",
+    "src": "Exam guide: platform - Git integration"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a diferenca fundamental entre spark.read e spark.readStream?",
+    "opts": [
+      "read processa um dataset finito (batch); readStream processa dados que chegam continuamente (streaming)",
+      "Nao ha diferenca",
+      "read so funciona com Delta",
+      "readStream nao usa checkpoint"
+    ],
+    "c": 0,
+    "expl": "spark.read le um conjunto de dados fixo/limitado (batch). spark.readStream inicia uma query de streaming que processa dados incrementalmente conforme chegam, usando checkpoint para tolerancia a falhas.",
+    "src": "Docs: Structured Streaming basics"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira quer ingerir dados de um sistema SaaS/aplicativo empresarial (ex.: Salesforce, Workday) com conectores gerenciados. Qual recurso da plataforma e o indicado?",
+    "opts": [
+      "Auto Loader",
+      "Lakeflow Connect",
+      "Delta Sharing",
+      "Structured Streaming com Kafka"
+    ],
+    "c": 1,
+    "expl": "Lakeflow Connect fornece conectores gerenciados para ingerir dados de aplicacoes empresariais e bancos de dados (CDC, SaaS). Auto Loader e para arquivos em object storage.",
+    "src": "Exam guide: Data Ingestion with Lakeflow Connect"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao mudar o tipo de sink de saida ou o tipo de source de uma query de streaming existente, o que geralmente e necessario?",
+    "opts": [
+      "Um novo checkpoint",
+      "Nada muda",
+      "Apenas aumentar o cluster",
+      "Rodar VACUUM"
+    ],
+    "c": 0,
+    "expl": "Mudancas no numero/tipo de sources, topicos Kafka/paths do Auto Loader, tipo de operacao stateful ou tipo de sink geralmente exigem um novo checkpoint, pois o checkpoint antigo pode gerar erros imprevisiveis. Mudancas seguras incluem filtros e intervalos de trigger.",
+    "src": "Docs: Structured Streaming checkpoint changes"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual leitura descreve corretamente arquivos binaryFile como source no Auto Loader?",
+    "opts": [
+      "Tem schema fixo; nao ha inferencia/evolucao de schema",
+      "Suporta evolucao completa de schema",
+      "So funciona com CSV",
+      "Requer schemaLocation obrigatorio"
+    ],
+    "c": 0,
+    "expl": "O formato binaryFile (e text) tem schema fixo - nao se aplica inferencia nem evolucao de schema. Util para carregar arquivos como blobs (imagens, PDFs).",
+    "src": "Docs: Auto Loader supported formats (binaryfile fixed schema)"
+  },
+  {
+    "dom": "dev",
+    "stem": "O que acontece se voce tentar ler CSV com Auto Loader e definir apenas cloudFiles.format=csv e load(path), sem schemaLocation nem schema explicito?",
+    "opts": [
+      "A inferencia/evolucao de schema nao e habilitada, pois falta o schemaLocation",
+      "O stream falha imediatamente sempre",
+      "Todos os dados vao para _rescued_data",
+      "O Spark usa o schema do Hive metastore"
+    ],
+    "c": 0,
+    "expl": "Especificar cloudFiles.schemaLocation e o que habilita a inferencia e evolucao de schema. Sem ele (e sem schema explicito adequado), esse mecanismo nao e ativado.",
+    "src": "Docs: Auto Loader - schemaLocation enables inference/evolution"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao distingue corretamente uma tabela managed de uma external no Unity Catalog?",
+    "opts": [
+      "DROP em managed apaga metadados E arquivos; DROP em external apaga apenas os metadados",
+      "External so pode ser lida",
+      "Managed nao pode usar Delta",
+      "External tem arquivos gerenciados pelo metastore automaticamente"
+    ],
+    "c": 0,
+    "expl": "Managed table: o Databricks gerencia dados e localizacao - DROP remove metadados e arquivos. External table: dados em local externo controlado por voce - DROP remove so os metadados, preservando os arquivos.",
+    "src": "Exam guide: managed vs external tables"
+  },
+  {
+    "dom": "gov",
+    "stem": "O grupo analysts ja tem USE CATALOG e USE SCHEMA. Voce quer conceder leitura em todas as tabelas atuais e futuras do schema vendas. Qual comando?",
+    "opts": [
+      "GRANT ALL PRIVILEGES ON SCHEMA vendas TO analysts;",
+      "GRANT SELECT ON SCHEMA vendas TO analysts;",
+      "GRANT INSERT ON SCHEMA vendas TO analysts;",
+      "GRANT MODIFY ON SCHEMA vendas TO analysts;"
+    ],
+    "c": 1,
+    "expl": "GRANT SELECT ON SCHEMA concede leitura em todas as tabelas do schema, inclusive futuras. ALL PRIVILEGES excede leitura; INSERT/MODIFY dao escrita.",
+    "src": "Exam guide: grant permissions within UC"
+  },
+  {
+    "dom": "gov",
+    "stem": "Uma empresa quer compartilhar tabelas com um parceiro que nao usa Databricks, sem replicar dados. Qual recurso atende?",
+    "opts": [
+      "Delta Sharing (protocolo aberto)",
+      "Lakehouse Federation",
+      "Delta Live Tables",
+      "Databricks Repos"
+    ],
+    "c": 0,
+    "expl": "Delta Sharing e protocolo aberto que compartilha dados vivos sem replicacao, inclusive com destinatarios que nao usam Databricks (open sharing). Lakehouse Federation faz o oposto (consultar fontes externas de dentro do Databricks).",
+    "src": "Exam guide: Delta Sharing"
+  },
+  {
+    "dom": "gov",
+    "stem": "Um analista precisa saber de qual tabela bronze uma coluna gold foi derivada, sem ler o codigo. Qual recurso do UC fornece isso?",
+    "opts": [
+      "Audit logs",
+      "Data lineage",
+      "Delta Sharing",
+      "Predictive optimization"
+    ],
+    "c": 1,
+    "expl": "O data lineage do UC rastreia automaticamente o fluxo de dados entre tabelas e colunas (upstream/downstream). Audit logs registram quem fez o que, nao a derivacao dos dados.",
+    "src": "Exam guide: lineage features in UC"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao sobre Lakehouse Federation esta correta?",
+    "opts": [
+      "Permite consultar fontes externas (PostgreSQL, Snowflake) direto do Databricks sem mover os dados",
+      "E o mesmo que Delta Sharing para destinatarios Databricks",
+      "Forca copia de todas as tabelas externas para managed",
+      "So funciona com Parquet"
+    ],
+    "c": 0,
+    "expl": "Lakehouse Federation consulta sistemas externos in-place via UC, sem ETL/replicacao. E oposto ao Delta Sharing (que expoe dados do Databricks para fora).",
+    "src": "Exam guide: Lakehouse Federation"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual a hierarquia correta de objetos no Unity Catalog?",
+    "opts": [
+      "Metastore -> Catalog -> Schema -> Table",
+      "Catalog -> Metastore -> Table -> Schema",
+      "Workspace -> Catalog -> Table -> Schema",
+      "Schema -> Catalog -> Metastore -> Table"
+    ],
+    "c": 0,
+    "expl": "Hierarquia do UC: Metastore (um por regiao) -> Catalog -> Schema (database) -> objetos (Table/View/Volume/Function). Referencias usam catalog.schema.table.",
+    "src": "Exam guide: structure/key roles in UC"
+  },
+  {
+    "dom": "gov",
+    "stem": "No namespace de tres niveis do Unity Catalog, como voce referencia uma tabela clientes no schema vendas do catalogo prod?",
+    "opts": [
+      "prod.vendas.clientes",
+      "vendas.prod.clientes",
+      "clientes.vendas.prod",
+      "prod/vendas/clientes"
+    ],
+    "c": 0,
+    "expl": "O namespace de tres niveis e catalog.schema.table, ou seja prod.vendas.clientes.",
+    "src": "Docs: UC three-level namespace"
+  },
+  {
+    "dom": "gov",
+    "stem": "Onde os audit logs do Unity Catalog sao armazenados/entregues por padrao em ambientes configurados?",
+    "opts": [
+      "Em um local de entrega de logs configurado pela conta (ex.: system tables / bucket de log delivery)",
+      "Apenas na memoria do cluster",
+      "Na coluna _rescued_data",
+      "No checkpoint de streaming"
+    ],
+    "c": 0,
+    "expl": "Audit logs sao entregues/armazenados conforme a configuracao de log delivery da conta e podem ser consultados via system tables. Registram acoes de acesso e governanca.",
+    "src": "Exam guide: how audit logs are stored"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e uma limitacao a considerar no Delta Sharing?",
+    "opts": [
+      "Compartilhar dados entre nuvens/regioes pode gerar custos de egress e latencia",
+      "Nao permite compartilhar tabelas Delta",
+      "Exige que o destinatario use SQL Warehouse",
+      "Nao suporta protocolo aberto"
+    ],
+    "c": 0,
+    "expl": "Compartilhar dados entre nuvens/regioes pode envolver custos de transferencia de dados (egress) e latencia - uma consideracao de custo importante. Delta Sharing suporta protocolo aberto e tabelas Delta.",
+    "src": "Exam guide: cost considerations of data sharing across clouds"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a diferenca entre os dois tipos de Delta Sharing?",
+    "opts": [
+      "Databricks-para-Databricks (destinatario no Databricks) vs open sharing (destinatario em qualquer sistema via protocolo aberto)",
+      "Interno vs criptografado",
+      "Batch vs streaming",
+      "Managed vs external"
+    ],
+    "c": 0,
+    "expl": "Ha o compartilhamento Databricks-para-Databricks (ambos usam UC) e o open sharing, que entrega dados a destinatarios em qualquer plataforma que implemente o protocolo aberto do Delta Sharing.",
+    "src": "Exam guide: types of Delta Sharing"
+  },
+  {
+    "dom": "gov",
+    "stem": "Para configurar Delta Sharing onde parceiros externos tem apenas leitura e times internos tem leitura e escrita, o que fazer?",
+    "opts": [
+      "Conceder READ aos parceiros via Delta Share e READ/WRITE aos times internos no Unity Catalog",
+      "Dar READ/WRITE a ambos no Delta Share",
+      "Distribuir uma URL de acesso irrestrito",
+      "Criar tabelas external para os parceiros"
+    ],
+    "c": 0,
+    "expl": "Delta Sharing concede acesso de leitura ao destinatario externo atraves do share; permissoes de escrita para times internos sao geridas no proprio Unity Catalog (o share em si e read-only para o destinatario).",
+    "src": "Exam guide sample Q3: Delta Sharing"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual comando concede a um usuario a capacidade de criar tabelas dentro de um schema?",
+    "opts": [
+      "GRANT CREATE TABLE ON SCHEMA vendas TO `user@x.com`;",
+      "GRANT SELECT ON SCHEMA vendas TO `user@x.com`;",
+      "GRANT USE CATALOG TO `user@x.com`;",
+      "GRANT READ ON SCHEMA vendas TO `user@x.com`;"
+    ],
+    "c": 0,
+    "expl": "CREATE TABLE e o privilegio necessario para criar tabelas em um schema. SELECT so le, e USE CATALOG/USE SCHEMA apenas permitem navegar/referenciar.",
+    "src": "Docs: UC privileges (CREATE TABLE)"
+  },
+  {
+    "dom": "gov",
+    "stem": "Um usuario reclama que nao consegue nem sequer referenciar prod.vendas.clientes, mesmo tendo SELECT na tabela. Qual permissao provavelmente falta?",
+    "opts": [
+      "USE CATALOG em prod e USE SCHEMA em vendas",
+      "ALL PRIVILEGES no metastore",
+      "MODIFY na tabela",
+      "CREATE no schema"
+    ],
+    "c": 0,
+    "expl": "Para acessar um objeto, alem do privilegio sobre o objeto (SELECT), o usuario precisa de USE CATALOG no catalogo e USE SCHEMA no schema que o contem. Sem eles, nao consegue nem navegar ate a tabela.",
+    "src": "Docs: UC privilege model (USE CATALOG/USE SCHEMA)"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual objeto do Unity Catalog e usado para gerenciar acesso governado a arquivos nao tabulares (ex.: imagens, PDFs) em object storage?",
+    "opts": [
+      "Volume",
+      "External location apenas",
+      "Share",
+      "Materialized view"
+    ],
+    "c": 0,
+    "expl": "Volumes sao objetos do UC que governam o acesso a dados nao tabulares em object storage (managed ou external volumes), permitindo listar/ler/gravar arquivos sob governanca do catalogo.",
+    "src": "Docs: UC Volumes"
+  },
+  {
+    "dom": "gov",
+    "stem": "Um metastore do Unity Catalog esta associado a que?",
+    "opts": [
+      "A uma regiao da nuvem; workspaces daquela regiao podem ser atribuidos a ele",
+      "A um unico cluster",
+      "A uma unica tabela",
+      "A um notebook especifico"
+    ],
+    "c": 0,
+    "expl": "Um metastore do UC e o container de nivel superior de metadados, criado por regiao da nuvem. Varios workspaces da mesma regiao podem ser atribuidos ao mesmo metastore para compartilhar governanca.",
+    "src": "Docs: UC metastore"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual papel/entidade tipicamente administra o metastore e atribui catalogos no Unity Catalog?",
+    "opts": [
+      "Metastore admin (e account admins)",
+      "Qualquer usuario do workspace",
+      "Somente o servico de billing",
+      "O owner de um notebook"
+    ],
+    "c": 0,
+    "expl": "O metastore admin (e admins de conta) gerencia o metastore, cria catalogos e delega privilegios. Usuarios comuns so tem o que lhes for concedido.",
+    "src": "Exam guide: key roles in UC"
+  },
+  {
+    "dom": "gov",
+    "stem": "Para revogar um privilegio concedido anteriormente a um grupo, qual comando e usado?",
+    "opts": [
+      "REVOKE SELECT ON SCHEMA vendas FROM analysts;",
+      "DROP GRANT SELECT ON vendas;",
+      "DELETE PRIVILEGE SELECT FROM analysts;",
+      "REMOVE SELECT ON vendas TO analysts;"
+    ],
+    "c": 0,
+    "expl": "REVOKE <privilegio> ON <objeto> FROM <principal> remove um privilegio concedido. As demais sintaxes nao existem.",
+    "src": "Docs: UC REVOKE"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a vantagem de usar grupos em vez de usuarios individuais ao gerenciar permissoes no UC?",
+    "opts": [
+      "Facilita a manutencao: conceder/revogar no grupo aplica a todos os membros, reduzindo erros e trabalho",
+      "Grupos tem mais privilegios automaticamente",
+      "So grupos podem acessar Delta",
+      "Usuarios individuais nao podem receber GRANT"
+    ],
+    "c": 0,
+    "expl": "Gerenciar permissoes por grupo e uma boa pratica: voce concede/revoga uma vez no grupo e isso se aplica a todos os membros, simplificando a governanca e reduzindo erros.",
+    "src": "Docs: UC best practices (groups)"
+  },
+  {
+    "dom": "gov",
+    "stem": "Um requisito de compliance exige rastrear todos os acessos de leitura a uma tabela sensivel. Qual recurso fornece esse registro?",
+    "opts": [
+      "Audit logs",
+      "Time travel",
+      "OPTIMIZE",
+      "Widgets"
+    ],
+    "c": 0,
+    "expl": "Audit logs registram acoes e acessos (quem, o que, quando), atendendo a requisitos de auditoria/compliance. Time travel e sobre versoes de dados, nao sobre quem acessou.",
+    "src": "Exam guide: audit logs"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao sobre ownership de objetos no UC e correta?",
+    "opts": [
+      "O owner de um objeto pode conceder privilegios sobre ele e, por padrao, tem controle total",
+      "Objetos nao tem owner",
+      "So o account admin pode ler qualquer tabela",
+      "Ownership nao pode ser transferido"
+    ],
+    "c": 0,
+    "expl": "Cada objeto securavel no UC tem um owner, que possui controle total e pode conceder/revogar privilegios sobre o objeto. Ownership pode ser transferido com ALTER ... OWNER TO.",
+    "src": "Docs: UC object ownership"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma equipe roda um job de producao agendado, totalmente automatizado, toda noite. Qual compute e o mais economico e apropriado?",
+    "opts": [
+      "All-purpose cluster ligado 24/7",
+      "Job cluster (criado para o job e encerrado ao terminar)",
+      "SQL Warehouse interativo",
+      "Cluster single-node de desenvolvimento"
+    ],
+    "c": 1,
+    "expl": "Job clusters sao criados para executar o job e encerrados automaticamente ao concluir - mais baratos que all-purpose para producao. All-purpose 24/7 desperdica recurso.",
+    "src": "Exam guide: applicable compute for a use case"
+  },
+  {
+    "dom": "plat",
+    "stem": "Varios analistas precisam desenvolver interativamente em notebooks, compartilhando o mesmo cluster durante o dia. Qual compute usar?",
+    "opts": [
+      "Job cluster",
+      "All-purpose cluster",
+      "Um pipeline LDP",
+      "Somente serverless SQL Warehouse"
+    ],
+    "c": 1,
+    "expl": "All-purpose clusters servem para desenvolvimento interativo e colaborativo, podendo ser compartilhados. Job clusters sao efemeros e encerram ao final do job.",
+    "src": "Exam guide: all-purpose vs job clusters"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual caracteristica melhor descreve a arquitetura Lakehouse?",
+    "opts": [
+      "Combina flexibilidade/baixo custo do data lake com estrutura, ACID e governanca do data warehouse em uma plataforma",
+      "Substitui object storage por bancos relacionais",
+      "Exige mover dados para um warehouse proprietario antes de analisar",
+      "So suporta BI, nao ML"
+    ],
+    "c": 0,
+    "expl": "O Lakehouse unifica os dois mundos: dados abertos e baratos em object storage (data lake) + ACID, governanca e performance (warehouse), via Delta Lake + Unity Catalog. Suporta BI, ETL e ML sobre a mesma copia.",
+    "src": "Exam guide: value of the Data Intelligence Platform"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma engenheira quer que o Databricks decida automaticamente o layout fisico dos dados para otimizar queries, sem gerenciar OPTIMIZE/ZORDER manualmente. Qual recurso?",
+    "opts": [
+      "Predictive Optimization / Liquid Clustering",
+      "Definir PARTITIONED BY manualmente em toda tabela",
+      "Aumentar o numero de workers",
+      "Desativar o Photon"
+    ],
+    "c": 0,
+    "expl": "Liquid Clustering e Predictive Optimization permitem que o Databricks gerencie automaticamente o layout e execute otimizacoes sem intervencao manual. Particionamento manual excessivo costuma piorar performance.",
+    "src": "Exam guide: features that simplify data layout"
+  },
+  {
+    "dom": "plat",
+    "stem": "O que e o Photon no contexto do Databricks?",
+    "opts": [
+      "Um motor de execucao vetorizado que acelera queries SQL e DataFrame",
+      "Um formato de arquivo",
+      "Um servico de compartilhamento de dados",
+      "Uma ferramenta de versionamento Git"
+    ],
+    "c": 0,
+    "expl": "Photon e o motor de execucao nativo, vetorizado e escrito em C++, que acelera cargas SQL e de DataFrame no Databricks, melhorando desempenho e custo-beneficio.",
+    "src": "Docs: Photon engine"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma carga puramente de BI/SQL de analistas precisa de compute otimizado para consultas SQL com auto-scaling e boa concorrencia. O que e mais apropriado?",
+    "opts": [
+      "Job cluster",
+      "SQL Warehouse",
+      "Um cluster single-node",
+      "Databricks Connect"
+    ],
+    "c": 1,
+    "expl": "SQL Warehouses (classico ou serverless) sao otimizados para cargas SQL/BI, com auto-scaling e concorrencia para dashboards e consultas de analistas.",
+    "src": "Exam guide: compute for a use case"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre serverless SQL Warehouse e verdadeira?",
+    "opts": [
+      "O compute e gerenciado pela Databricks, com startup quase instantaneo e sem provisionamento de infra pelo usuario",
+      "Requer configurar VMs manualmente",
+      "Nao escala",
+      "So roda notebooks Python"
+    ],
+    "c": 0,
+    "expl": "Serverless SQL Warehouse e gerenciado pela Databricks: startup rapido, escalonamento automatico e sem provisionar infraestrutura, reduzindo overhead operacional.",
+    "src": "Docs: Serverless SQL warehouses"
+  },
+  {
+    "dom": "plat",
+    "stem": "Um data lake tradicional sozinho carece de qual capacidade que o Delta Lake adiciona para transformar o lake em lakehouse?",
+    "opts": [
+      "Transacoes ACID e enforcement/evolucao de schema",
+      "Armazenamento em object storage",
+      "Formato colunar",
+      "Suporte a Python"
+    ],
+    "c": 0,
+    "expl": "Delta Lake adiciona transacoes ACID, enforcement e evolucao de schema, time travel e confiabilidade sobre arquivos em object storage - capacidades que um data lake puro nao tem, viabilizando o lakehouse.",
+    "src": "Docs: Delta Lake / Lakehouse"
+  },
+  {
+    "dom": "plat",
+    "stem": "O que diferencia um data warehouse de um data lake tradicional?",
+    "opts": [
+      "Warehouse e estruturado e otimizado para BI/SQL com schema-on-write; lake armazena dados brutos de qualquer formato com schema-on-read",
+      "Nao ha diferenca",
+      "Lake so guarda dados estruturados",
+      "Warehouse nao suporta SQL"
+    ],
+    "c": 0,
+    "expl": "Data warehouse: dados estruturados, schema-on-write, otimizado para BI/SQL. Data lake: dados brutos de qualquer tipo, schema-on-read, barato e flexivel. O lakehouse une os dois.",
+    "src": "Exam guide: Lakehouse concepts"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma engenheira quer melhorar a performance de queries que filtram frequentemente por uma coluna de alta cardinalidade em uma tabela nova. Qual recomendacao atual da Databricks?",
+    "opts": [
+      "Usar Liquid Clustering",
+      "Criar centenas de particoes pequenas",
+      "Desabilitar estatisticas",
+      "Converter para CSV"
+    ],
+    "c": 0,
+    "expl": "Para tabelas novas, a Databricks recomenda Liquid Clustering em vez de ZORDER/particionamento manual, pois ele gerencia o layout de forma flexivel e evita problemas de over-partitioning.",
+    "src": "Docs: Liquid clustering (recommended for new tables)"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual recurso do Databricks SQL permite criar visualizacoes materializadas atualizadas incrementalmente para dashboards?",
+    "opts": [
+      "Materialized views",
+      "Widgets",
+      "Delta Sharing",
+      "Git Folders"
+    ],
+    "c": 0,
+    "expl": "Materialized views mantem resultados pre-computados atualizados de forma incremental, sendo recomendadas para muitas cargas de agregacao (inclusive substituindo semanticas de complete mode em streaming).",
+    "src": "Docs: Materialized views"
+  },
+  {
+    "dom": "plat",
+    "stem": "Um cluster de desenvolvimento fica ocioso muitas horas. Qual configuracao ajuda a controlar custo automaticamente?",
+    "opts": [
+      "Auto-termination apos periodo de inatividade",
+      "Desligar o Photon",
+      "Aumentar o numero de workers",
+      "Usar apenas complete mode"
+    ],
+    "c": 0,
+    "expl": "Auto-termination encerra o cluster apos um periodo configuravel de inatividade, evitando custos de compute ocioso - especialmente util em all-purpose clusters de desenvolvimento.",
+    "src": "Docs: cluster auto-termination"
+  },
+  {
+    "dom": "proc",
+    "stem": "Na arquitetura Medallion, qual descricao corresponde a camada Silver?",
+    "opts": [
+      "Dados brutos como chegaram, sem transformacao",
+      "Dados limpos, filtrados, com tipos corrigidos e conformados - prontos para consumo intermediario",
+      "Agregacoes de negocio finais para dashboards",
+      "Backups compactados de producao"
+    ],
+    "c": 1,
+    "expl": "Bronze = dados brutos. Silver = dados limpos, validados, deduplicados, tipos ajustados e conformados. Gold = agregacoes e metricas de negocio para BI.",
+    "src": "Exam guide: Medallion Architecture"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce precisa da receita total por dia e da contagem de pedidos unicos por dia a partir de vendas_df (colunas data, pedido_id, valor). Qual snippet esta correto?",
+    "opts": [
+      "groupBy(\"data\").agg(sum(\"valor\"), sum(\"pedido_id\"))",
+      "groupBy(\"data\").agg(sum(\"valor\"), count(\"valor\"))",
+      "groupBy(\"data\").agg(sum(\"valor\"), count_distinct(\"pedido_id\"))",
+      "agg(sum(\"valor\"), count_distinct(\"pedido_id\"))"
+    ],
+    "c": 2,
+    "expl": "Agrupar por data e contar pedidos unicos exige count_distinct(\"pedido_id\"). Somar pedido_id nao faz sentido; count conta linhas; sem groupBy nao ha resultado por dia.",
+    "src": "Exam guide sample Q1: aggregations with PySpark"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando DDL cria uma tabela Delta vazia com um schema, substituindo a tabela se ja existir?",
+    "opts": [
+      "CREATE OR REPLACE TABLE t (id STRING, dt DATE)",
+      "CREATE TABLE IF NOT EXISTS t (id STRING, dt DATE)",
+      "CREATE TABLE t AS SELECT id, dt",
+      "REPLACE TABLE t WITH COLUMNS (id STRING, dt DATE)"
+    ],
+    "c": 0,
+    "expl": "CREATE OR REPLACE TABLE cria e, se existir, substitui. IF NOT EXISTS nao substitui; CTAS exige query de dados; a sintaxe WITH COLUMNS nao existe.",
+    "src": "Exam guide sample Q4: DDL/DML"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando faz o append de um novo registro a uma tabela Delta t?",
+    "opts": [
+      "UPDATE t VALUES ('a1', 6, 9.4)",
+      "INSERT VALUES ('a1', 6, 9.4) INTO t",
+      "INSERT INTO t VALUES ('a1', 6, 9.4)",
+      "APPEND INTO t VALUES ('a1', 6, 9.4)"
+    ],
+    "c": 2,
+    "expl": "A sintaxe correta e INSERT INTO tabela VALUES (...). UPDATE usa SET; a ordem em B esta invertida; APPEND INTO nao existe.",
+    "src": "Exam guide sample Q5: DDL/DML"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e uma vantagem central de usar Lakeflow Declarative Pipelines (LDP, antiga DLT) em vez de notebooks de ETL imperativos?",
+    "opts": [
+      "Gerencia dependencias entre tabelas, orquestracao, retries e qualidade (expectations) de forma declarativa",
+      "Elimina a necessidade de compute",
+      "Converte Python em Scala compilado",
+      "Dispensa o Unity Catalog"
+    ],
+    "c": 0,
+    "expl": "Com LDP voce declara o que cada tabela deve conter; o framework resolve o DAG, orquestra, faz retries, gerencia streaming/checkpoints e aplica expectations - reduzindo boilerplate.",
+    "src": "Exam guide: advantages of LDP"
+  },
+  {
+    "dom": "proc",
+    "stem": "Em um pipeline LDP, voce quer descartar registros que violem valor > 0. Qual mecanismo usar?",
+    "opts": [
+      "Expectations com ON VIOLATION DROP ROW",
+      "try/except no Python",
+      "badRecordsPath do leitor",
+      "Um VACUUM agendado"
+    ],
+    "c": 0,
+    "expl": "LDP usa expectations para regras de qualidade declarativas. A acao em violacao pode ser: manter e registrar, DROP ROW (descartar), ou FAIL UPDATE (falhar). badRecordsPath lida com corrompidos na leitura.",
+    "src": "Docs: LDP expectations"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando compacta muitos arquivos pequenos de uma tabela Delta em arquivos maiores, melhorando leitura?",
+    "opts": [
+      "OPTIMIZE tabela",
+      "VACUUM tabela",
+      "DESCRIBE HISTORY tabela",
+      "REFRESH tabela"
+    ],
+    "c": 0,
+    "expl": "OPTIMIZE faz bin-packing, compactando arquivos pequenos em arquivos maiores e melhorando performance de leitura. VACUUM remove arquivos obsoletos; nao compacta.",
+    "src": "Docs: OPTIMIZE"
+  },
+  {
+    "dom": "proc",
+    "stem": "O que o comando VACUUM tabela faz por padrao?",
+    "opts": [
+      "Remove arquivos de dados nao referenciados ha mais de 7 dias",
+      "Compacta arquivos pequenos",
+      "Cria uma nova versao da tabela",
+      "Aplica ZORDER"
+    ],
+    "c": 0,
+    "expl": "VACUUM remove arquivos nao mais referenciados pelo log de transacoes, com retencao padrao de 7 dias. Isso limita a janela de time travel. Nao compacta (isso e OPTIMIZE).",
+    "src": "Docs: VACUUM (default 7-day retention)"
+  },
+  {
+    "dom": "proc",
+    "stem": "Uma engenheira rodou VACUUM e agora nao consegue fazer time travel para uma versao de 10 dias atras (erro de arquivos ausentes). Por que?",
+    "opts": [
+      "VACUUM removeu os arquivos de dados antigos alem da retencao padrao (7 dias)",
+      "OPTIMIZE apagou o historico",
+      "DESCRIBE HISTORY corrompeu o log",
+      "time travel nao existe em Delta"
+    ],
+    "c": 0,
+    "expl": "VACUUM deleta arquivos alem da janela de retencao (padrao 7 dias). Depois disso, versoes antigas que dependiam desses arquivos ficam inacessiveis para time travel.",
+    "src": "Docs: VACUUM affects time travel window"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando co-localiza dados relacionados nos mesmos arquivos para acelerar filtros em colunas especificas de alta cardinalidade?",
+    "opts": [
+      "OPTIMIZE tabela ZORDER BY (coluna)",
+      "VACUUM tabela",
+      "ANALYZE tabela",
+      "MSCK REPAIR TABLE"
+    ],
+    "c": 0,
+    "expl": "OPTIMIZE ... ZORDER BY (col) co-localiza dados relacionados nos mesmos arquivos, melhorando data skipping em filtros nessas colunas. Para tabelas novas, a Databricks recomenda Liquid Clustering.",
+    "src": "Docs: OPTIMIZE ZORDER BY"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando mostra o historico de versoes (operacao, usuario, timestamp) de uma tabela Delta?",
+    "opts": [
+      "DESCRIBE HISTORY tabela",
+      "DESCRIBE DETAIL tabela",
+      "SHOW TABLES",
+      "DESCRIBE EXTENDED tabela"
+    ],
+    "c": 0,
+    "expl": "DESCRIBE HISTORY retorna o historico de operacoes (INSERT, MERGE, OPTIMIZE, etc.), usuario e timestamp, em ordem cronologica reversa. Util para auditar, dar rollback ou fazer time travel.",
+    "src": "Docs: Work with table history"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce quer consultar uma tabela Delta como ela estava na versao 5. Qual sintaxe usar?",
+    "opts": [
+      "SELECT * FROM tabela VERSION AS OF 5",
+      "SELECT * FROM tabela AT 5",
+      "SELECT * FROM tabela ROLLBACK 5",
+      "SELECT * FROM tabela HISTORY 5"
+    ],
+    "c": 0,
+    "expl": "Time travel por versao usa VERSION AS OF <n> (ou TIMESTAMP AS OF '...' por data). As demais sintaxes nao existem.",
+    "src": "Docs: Delta time travel syntax"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce precisa fazer upsert (inserir novos e atualizar existentes) de uma tabela de mudancas em uma tabela alvo. Qual comando Delta usar?",
+    "opts": [
+      "MERGE INTO alvo USING fonte ON ... WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT",
+      "INSERT OVERWRITE",
+      "UPDATE alvo SET ...",
+      "COPY INTO"
+    ],
+    "c": 0,
+    "expl": "MERGE INTO faz upsert: atualiza linhas correspondentes (WHEN MATCHED) e insere as novas (WHEN NOT MATCHED) em uma unica operacao transacional.",
+    "src": "Docs: Delta MERGE"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual output mode de Structured Streaming so funciona com agregacoes e emite todos os resultados ja produzidos a cada trigger?",
+    "opts": [
+      "Append",
+      "Update",
+      "Complete",
+      "Delta"
+    ],
+    "c": 2,
+    "expl": "Complete mode emite todas as linhas ja produzidas pelo operador stateful a cada trigger e so funciona com agregacoes de streaming. Pode ter desempenho ruim ao escalar; a Databricks sugere materialized views nesses casos.",
+    "src": "Docs: Structured Streaming output modes"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual output mode e o padrao em Structured Streaming e emite apenas linhas que nao mudam em triggers futuros?",
+    "opts": [
+      "Append",
+      "Complete",
+      "Update",
+      "Overwrite"
+    ],
+    "c": 0,
+    "expl": "Append e o padrao: operadores emitem apenas linhas que nao mudarao em triggers futuros (operadores stateful usam watermark para decidir isso).",
+    "src": "Docs: Structured Streaming append mode"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual output mode emite todas as linhas que mudaram desde o trigger anterior, mesmo que possam mudar de novo depois?",
+    "opts": [
+      "Append",
+      "Update",
+      "Complete",
+      "Snapshot"
+    ],
+    "c": 1,
+    "expl": "Update mode emite as linhas que mudaram no trigger, util quando servicos downstream precisam de resultados frescos. Pode gerar multiplas escritas por registro conforme o estado muda.",
+    "src": "Docs: Structured Streaming update mode"
+  },
+  {
+    "dom": "proc",
+    "stem": "Um DataFrame tem duplicatas. Qual metodo remove linhas totalmente duplicadas?",
+    "opts": [
+      "df.dropDuplicates()",
+      "df.filter()",
+      "df.explode()",
+      "df.pivot()"
+    ],
+    "c": 0,
+    "expl": "dropDuplicates() remove linhas duplicadas (opcionalmente por um subconjunto de colunas com dropDuplicates([\"col\"])). distinct() tambem remove duplicatas completas.",
+    "src": "Docs: PySpark deduplication"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual funcao PySpark voce usaria para transformar cada elemento de uma coluna do tipo array em uma linha separada?",
+    "opts": [
+      "explode()",
+      "collect_list()",
+      "flatten()",
+      "split()"
+    ],
+    "c": 0,
+    "expl": "explode() cria uma nova linha para cada elemento de um array (ou par de um map), \"achatando\" a estrutura. collect_list() faz o oposto (agrega em array).",
+    "src": "Docs: PySpark explode"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a forma correta de criar uma UDF (funcao definida pelo usuario) em PySpark para aplicar logica customizada a uma coluna?",
+    "opts": [
+      "Registrar uma funcao Python com udf() (ou @udf) e aplica-la a coluna",
+      "Usar apenas groupBy()",
+      "Usar OPTIMIZE",
+      "Usar %md"
+    ],
+    "c": 0,
+    "expl": "Cria-se uma UDF envolvendo uma funcao Python com udf(func, returnType) ou o decorador @udf, e entao aplica-se a coluna via withColumn/select. (UDFs nativas SQL/pandas UDFs costumam ter melhor desempenho.)",
+    "src": "Exam guide: user-defined functions"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL adiciona uma nova coluna a uma tabela Delta existente?",
+    "opts": [
+      "ALTER TABLE t ADD COLUMN nova STRING",
+      "UPDATE t ADD nova STRING",
+      "MODIFY TABLE t ADD nova",
+      "INSERT COLUMN nova INTO t"
+    ],
+    "c": 0,
+    "expl": "ALTER TABLE ... ADD COLUMN[S] e o DDL para adicionar colunas a uma tabela existente. As demais sintaxes sao invalidas.",
+    "src": "Docs: ALTER TABLE ADD COLUMN"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a diferenca entre uma VIEW e uma tabela no Databricks?",
+    "opts": [
+      "Uma view e uma query salva (logica) que nao armazena dados; a tabela materializa os dados",
+      "View armazena dados e tabela nao",
+      "Nao ha diferenca",
+      "View so funciona em streaming"
+    ],
+    "c": 0,
+    "expl": "Uma view e uma consulta nomeada/salva que e executada quando referenciada - nao armazena dados. Uma tabela persiste os dados. Temp views existem apenas na sessao.",
+    "src": "Docs: views vs tables"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando cria uma view temporaria visivel apenas na sessao/notebook atual?",
+    "opts": [
+      "CREATE OR REPLACE TEMP VIEW v AS SELECT ...",
+      "CREATE TABLE v AS SELECT ...",
+      "CREATE PERMANENT VIEW v",
+      "CREATE STREAMING TABLE v"
+    ],
+    "c": 0,
+    "expl": "CREATE OR REPLACE TEMP VIEW cria uma view temporaria no escopo da sessao (Spark session), que desaparece ao encerrar. Views permanentes ficam no catalogo.",
+    "src": "Docs: temporary views"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual funcao de janela (window) voce usaria para numerar linhas dentro de uma particao ordenada?",
+    "opts": [
+      "row_number() com Window.partitionBy(...).orderBy(...)",
+      "count()",
+      "explode()",
+      "collect_set()"
+    ],
+    "c": 0,
+    "expl": "row_number() sobre uma especificacao de janela (Window.partitionBy().orderBy()) atribui um numero sequencial a cada linha dentro da particao - util para deduplicacao por chave mantendo o registro mais recente.",
+    "src": "Docs: PySpark window functions"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual das opcoes e a melhor descricao da camada Bronze na Medallion?",
+    "opts": [
+      "Ingestao de dados brutos, tipicamente em append, preservando o dado como chegou da origem",
+      "Agregacoes finais de negocio",
+      "Dados limpos e conformados",
+      "Tabelas de BI otimizadas"
+    ],
+    "c": 0,
+    "expl": "Bronze e a camada de aterrissagem: ingere dados brutos (append-only) preservando o historico/estado original da fonte, servindo de base auditavel para o refino em Silver.",
+    "src": "Exam guide: Medallion bronze layer"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando permite carregar arquivos de forma idempotente e incremental via SQL, ignorando arquivos ja carregados?",
+    "opts": [
+      "COPY INTO",
+      "INSERT INTO",
+      "MERGE INTO",
+      "OPTIMIZE"
+    ],
+    "c": 0,
+    "expl": "COPY INTO carrega arquivos para uma tabela Delta de forma incremental e idempotente (rastreia arquivos ja ingeridos). E uma alternativa SQL ao Auto Loader para cargas de volume menor/periodicas.",
+    "src": "Docs: COPY INTO"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a diferenca entre OPTIMIZE (bin-packing) e ZORDER?",
+    "opts": [
+      "Bin-packing e idempotente e so compacta tamanho; ZORDER reorganiza dados por colunas para data skipping e nao e idempotente",
+      "Sao identicos",
+      "ZORDER remove arquivos",
+      "Bin-packing so funciona em CSV"
+    ],
+    "c": 0,
+    "expl": "Bin-packing (OPTIMIZE sem ZORDER) e idempotente e produz arquivos balanceados por tamanho. ZORDER co-localiza dados por colunas para melhorar data skipping, e nao e idempotente (e incremental).",
+    "src": "Docs: OPTIMIZE vs ZORDER idempotency"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual cluster/configuracao e ideal para um pipeline LDP em producao que precisa de otimizacao automatica de compute?",
+    "opts": [
+      "Compute serverless gerenciado pelo pipeline",
+      "Um cluster all-purpose compartilhado 24/7",
+      "Um cluster single-node manual",
+      "SQL Warehouse"
+    ],
+    "c": 0,
+    "expl": "Pipelines LDP podem rodar em compute serverless, auto-otimizado e gerenciado, ideal para producao sem gerenciamento manual de cluster.",
+    "src": "Exam guide: cluster config for LDP / serverless"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual afirmacao sobre DELETE em uma tabela Delta e correta?",
+    "opts": [
+      "Remove linhas logicamente e cria uma nova versao; arquivos antigos permanecem ate o VACUUM",
+      "Apaga fisicamente os arquivos imediatamente",
+      "Nao e suportado em Delta",
+      "Requer reescrever a tabela inteira manualmente"
+    ],
+    "c": 0,
+    "expl": "DELETE em Delta e transacional: remove linhas criando uma nova versao da tabela. Os arquivos antigos ficam disponiveis para time travel ate serem removidos por VACUUM.",
+    "src": "Docs: Delta DELETE + VACUUM"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual arquivo e obrigatorio e unico na raiz de um projeto de Databricks Asset Bundle (DAB)?",
+    "opts": [
+      "databricks.yml",
+      "bundle.json",
+      "Dockerfile",
+      "requirements.txt"
+    ],
+    "c": 0,
+    "expl": "Um bundle deve conter um e apenas um databricks.yml na raiz. Ele define o nome do bundle, os targets e pode referenciar outros YAMLs via include.",
+    "src": "Docs: DAB configuration"
+  },
+  {
+    "dom": "prod",
+    "stem": "Em um databricks.yml, jobs, pipelines e notebooks sao declarados sob qual mapeamento?",
+    "opts": [
+      "resources",
+      "artifacts",
+      "variables",
+      "workspace"
+    ],
+    "c": 0,
+    "expl": "Recursos (jobs, pipelines, dashboards, apps, model serving) ficam sob resources. artifacts define builds (wheels), variables define variaveis, targets define ambientes.",
+    "src": "Docs: DAB resources mapping"
+  },
+  {
+    "dom": "prod",
+    "stem": "Um job de producao falhou na 3a de 5 tasks. Apos corrigir o bug, como reexecutar apenas a task que falhou e as subsequentes?",
+    "opts": [
+      "Usar 'Repair run' a partir da task que falhou",
+      "Deletar e recriar o job",
+      "Rodar VACUUM na saida",
+      "Aumentar o timeout"
+    ],
+    "c": 0,
+    "expl": "'Repair run' reexecuta a task que falhou e suas dependentes, reaproveitando resultados das tasks bem-sucedidas - evita reprocessar o pipeline inteiro.",
+    "src": "Exam guide: repair and rerun a task"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual afirmacao sobre compute serverless em jobs Databricks e correta?",
+    "opts": [
+      "A Databricks provisiona e otimiza o compute automaticamente, sem gerenciar tamanho de cluster ou startup",
+      "Exige configurar workers manualmente",
+      "So serve para SQL",
+      "Mantem um cluster all-purpose permanente"
+    ],
+    "c": 0,
+    "expl": "Serverless oferece compute hands-off e auto-otimizado gerenciado pela Databricks: sem provisionar/dimensionar clusters, com startup rapido e escalonamento automatico.",
+    "src": "Exam guide: serverless compute"
+  },
+  {
+    "dom": "prod",
+    "stem": "Voce suspeita de data skew e shuffle excessivo em uma query. Qual ferramenta inspeciona stages, tasks e tempo de cada etapa?",
+    "opts": [
+      "A Spark UI",
+      "O Data Explorer",
+      "O Delta Sharing dashboard",
+      "DESCRIBE HISTORY"
+    ],
+    "c": 0,
+    "expl": "A Spark UI mostra jobs, stages e tasks, revelando skew, spill, tempo de shuffle e gargalos - a ferramenta central para otimizacao. DESCRIBE HISTORY mostra versoes da tabela.",
+    "src": "Exam guide: analyzing the Spark UI"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual a principal diferenca entre DAB e configurar jobs manualmente pela UI?",
+    "opts": [
+      "DAB define recursos como codigo declarativo (YAML) versionavel, permitindo deploy consistente entre ambientes",
+      "DAB so funciona em SQL Warehouses",
+      "UI e a unica forma de CI/CD",
+      "DAB elimina o Git"
+    ],
+    "c": 0,
+    "expl": "DAB traz IaC: voce descreve jobs/pipelines em YAML versionado e faz deploy reprodutivel em multiplos targets. Configuracao manual pela UI nao e versionada nem reproduzivel.",
+    "src": "Exam guide: DAB vs traditional deployment"
+  },
+  {
+    "dom": "prod",
+    "stem": "Em um bundle com target dev marcado como default: true, qual comando faz o deploy para prod?",
+    "opts": [
+      "databricks bundle deploy -t prod",
+      "databricks bundle deploy",
+      "databricks deploy prod",
+      "bundle run prod"
+    ],
+    "c": 0,
+    "expl": "Como dev e o default, e preciso especificar -t prod explicitamente: databricks bundle deploy -t prod. Sem -t, o deploy iria para o target default (dev).",
+    "src": "Docs: DAB deploy targets"
+  },
+  {
+    "dom": "prod",
+    "stem": "No databricks.yml, para que serve o mapeamento include?",
+    "opts": [
+      "Referenciar outros arquivos YAML de configuracao (ex.: recursos separados)",
+      "Instalar bibliotecas Python",
+      "Definir credenciais de nuvem",
+      "Criar tabelas Delta"
+    ],
+    "c": 0,
+    "expl": "include permite modularizar a configuracao, referenciando outros arquivos YAML (ex.: resources/*.yml) - melhora reuso e organizacao em bundles maiores.",
+    "src": "Docs: DAB include mapping"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual a diferenca entre os modos de target development e production em DAB?",
+    "opts": [
+      "development isola/prefixa recursos por usuario para testes; production exige praticas mais rigidas (ex.: root_path definido)",
+      "Sao identicos",
+      "production nao permite jobs",
+      "development nao faz deploy"
+    ],
+    "c": 0,
+    "expl": "O modo development facilita iteracao (isola recursos, prefixa por usuario, pausa schedules). O modo production aplica validacoes mais estritas - por exemplo, exige root_path explicito para garantir uma unica copia do bundle.",
+    "src": "Docs: DAB deployment modes"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual comando valida a sintaxe e a configuracao de um bundle antes do deploy?",
+    "opts": [
+      "databricks bundle validate",
+      "databricks bundle test",
+      "databricks validate yml",
+      "databricks bundle check"
+    ],
+    "c": 0,
+    "expl": "databricks bundle validate verifica a configuracao do bundle (schema do YAML, referencias) antes de deploy/run. E o primeiro passo recomendado no fluxo.",
+    "src": "Docs: databricks bundle validate"
+  },
+  {
+    "dom": "prod",
+    "stem": "Um job precisa executar 3 tasks em ordem, cada uma dependendo da anterior. Como isso e configurado em um Databricks Job?",
+    "opts": [
+      "Definindo dependencias entre tasks (depends_on) formando um DAG",
+      "Criando 3 jobs separados",
+      "Usando apenas um notebook gigante",
+      "Rodando VACUUM entre elas"
+    ],
+    "c": 0,
+    "expl": "Databricks Jobs suportam multiplas tasks com dependencias (depends_on), formando um DAG orquestrado dentro do mesmo job - com controle de ordem, retries e paralelismo.",
+    "src": "Exam guide: deploy a workflow (multi-task jobs)"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual mecanismo permite reexecutar automaticamente uma task que falhou por erro transitorio, sem intervencao manual?",
+    "opts": [
+      "Configurar retries (numero de tentativas) na task",
+      "Rodar OPTIMIZE",
+      "Usar complete mode",
+      "Aumentar o schemaLocation"
+    ],
+    "c": 0,
+    "expl": "Configurar retries na task faz o job reexecuta-la automaticamente ate N vezes em caso de falha - util para erros transitorios (rede, throttling).",
+    "src": "Docs: Jobs task retries"
+  },
+  {
+    "dom": "prod",
+    "stem": "Como agendar um job para rodar todo dia as 6h automaticamente?",
+    "opts": [
+      "Configurar um trigger/schedule (cron) no job",
+      "Rodar manualmente todo dia",
+      "Usar apenas Auto Loader",
+      "Configurar VACUUM"
+    ],
+    "c": 0,
+    "expl": "Databricks Jobs suportam schedules baseados em cron (ou triggers como file arrival), permitindo execucao automatica recorrente - ex.: diariamente as 6h.",
+    "src": "Exam guide: configuring and scheduling jobs"
+  },
+  {
+    "dom": "prod",
+    "stem": "O que a estrutura de um Databricks Asset Bundle tipicamente contem alem do databricks.yml?",
+    "opts": [
+      "Pastas como resources/ (YAMLs de jobs/pipelines) e src/ (notebooks/codigo)",
+      "Apenas arquivos .parquet",
+      "Somente credenciais",
+      "Nenhum outro arquivo e permitido"
+    ],
+    "c": 0,
+    "expl": "Um bundle organiza codigo-fonte (notebooks/scripts em src/), definicoes de recursos (resources/*.yml), e o databricks.yml raiz - descrevendo o projeto de ponta a ponta como codigo.",
+    "src": "Exam guide: structure of Asset Bundles"
+  },
+  {
+    "dom": "prod",
+    "stem": "Ao analisar a Spark UI, voce ve uma task muito mais lenta que as demais no mesmo stage. Isso indica principalmente:",
+    "opts": [
+      "Data skew (distribuicao desigual de dados entre particoes/tasks)",
+      "Falta de Unity Catalog",
+      "Erro de sintaxe SQL",
+      "Ausencia de checkpoint"
+    ],
+    "c": 0,
+    "expl": "Uma task destoante em tempo/dados dentro de um stage indica data skew - uma particao com muito mais dados que as outras. Mitiga-se com salting, repartition, ou ajuste de chaves de join.",
+    "src": "Exam guide: Spark UI (skew)"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual comando efetivamente executa um recurso (ex.: um job) definido em um bundle apos o deploy?",
+    "opts": [
+      "databricks bundle run -t prod <job_key>",
+      "databricks bundle deploy",
+      "databricks bundle validate",
+      "databricks run job"
+    ],
+    "c": 0,
+    "expl": "databricks bundle run -t <target> <resource_key> dispara a execucao de um recurso do bundle (ex.: um job) no target especificado. deploy apenas envia os arquivos.",
+    "src": "Docs: databricks bundle run"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual a vantagem de usar variaveis (variables) em um bundle?",
+    "opts": [
+      "Parametrizar valores que mudam entre ambientes (ex.: caminhos, IDs de cluster) sem duplicar configuracao",
+      "Armazenar dados de tabelas",
+      "Substituir o Git",
+      "Compactar arquivos"
+    ],
+    "c": 0,
+    "expl": "variables permitem parametrizar o bundle (ex.: hosts, paths, cluster ids), com valores diferentes por target - evitando duplicacao e facilitando promocao dev->prod.",
+    "src": "Docs: DAB variables"
+  },
+  {
+    "dom": "prod",
+    "stem": "Para otimizar uma query lenta identificada na Spark UI com muito shuffle em um join, qual acao geralmente ajuda?",
+    "opts": [
+      "Habilitar broadcast join para a tabela pequena, evitando shuffle",
+      "Rodar VACUUM",
+      "Trocar para CSV",
+      "Remover o Unity Catalog"
+    ],
+    "c": 0,
+    "expl": "Se uma das tabelas do join e pequena, um broadcast join a envia para todos os executores, eliminando o shuffle caro. O Spark faz isso automaticamente (AQE) quando a tabela cabe no limite de broadcast.",
+    "src": "Docs: broadcast join optimization"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual afirmacao sobre notificacoes em Databricks Jobs e correta?",
+    "opts": [
+      "E possivel configurar alertas por email/webhook em inicio, sucesso ou falha do job",
+      "Notificacoes nao sao suportadas",
+      "So funcionam com serverless",
+      "Exigem um cluster all-purpose"
+    ],
+    "c": 0,
+    "expl": "Jobs suportam notificacoes (email, Slack via webhook, etc.) em eventos como inicio, sucesso e falha, permitindo monitoramento operacional de pipelines em producao.",
+    "src": "Docs: Jobs notifications"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao configurar Auto Loader, qual opcao define o formato do arquivo de origem?",
+    "opts": [
+      "cloudFiles.format",
+      "cloudFiles.schemaLocation",
+      "cloudFiles.inferColumnTypes",
+      "format(\"delta\")"
+    ],
+    "c": 0,
+    "expl": "cloudFiles.format especifica o formato de origem (json, csv, parquet, avro, etc.). O .format(\"cloudFiles\") define a source; o cloudFiles.format define o tipo de arquivo lido.",
+    "src": "Docs: Auto Loader options (cloudFiles.format)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Uma engenheira quer garantir que arquivos que chegam a cada minuto sejam ingeridos com baixa latencia, continuamente. Qual combinacao e apropriada?",
+    "opts": [
+      "Auto Loader com trigger de tempo curto (ex.: processingTime) ou default",
+      "Leitura batch unica por dia",
+      "COPY INTO manual esporadico",
+      "Delta Sharing"
+    ],
+    "c": 0,
+    "expl": "Para ingestao continua de baixa latencia de arquivos que chegam frequentemente, usa-se Auto Loader (streaming) com trigger de tempo curto ou default. Batch diario nao atende a latencia.",
+    "src": "Exam guide: ingestion patterns (streaming)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre o Auto Loader e escalabilidade para grande numero de arquivos e correta?",
+    "opts": [
+      "Ele escala eficientemente para bilhoes de arquivos usando notificacao de arquivos ou listagem de diretorio",
+      "Ele so suporta poucos arquivos",
+      "Ele exige listar todos os arquivos a cada micro-batch sempre",
+      "Ele nao suporta object storage"
+    ],
+    "c": 0,
+    "expl": "O Auto Loader escala para bilhoes de arquivos, com dois modos de descoberta: listagem de diretorio e file notification (usa servicos de notificacao da nuvem), sendo o ultimo mais eficiente em alto volume.",
+    "src": "Docs: Auto Loader file discovery modes"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e o efeito de display(df) em um notebook Databricks?",
+    "opts": [
+      "Renderiza os dados do DataFrame em uma tabela interativa com opcoes de visualizacao",
+      "Escreve o DataFrame em disco",
+      "Compacta a tabela",
+      "Cria um job agendado"
+    ],
+    "c": 0,
+    "expl": "display() renderiza o resultado de um DataFrame/consulta em uma tabela interativa no notebook, com opcoes de graficos e download - recurso de exploracao/depuracao.",
+    "src": "Exam guide: Notebooks functionality (display)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual comando %fs lista arquivos de um diretorio em object storage/DBFS?",
+    "opts": [
+      "%fs ls /caminho",
+      "%fs cat /caminho",
+      "%fs run /caminho",
+      "%fs sql /caminho"
+    ],
+    "c": 0,
+    "expl": "%fs ls /caminho (equivalente a dbutils.fs.ls) lista arquivos e diretorios. Util para inspecionar dados de origem antes de ingerir.",
+    "src": "Docs: dbutils.fs / %fs"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual comando concede a um usuario permissao para modificar (inserir/atualizar/deletar) dados de uma tabela especifica?",
+    "opts": [
+      "GRANT MODIFY ON TABLE t TO `user@x.com`;",
+      "GRANT SELECT ON TABLE t TO `user@x.com`;",
+      "GRANT USE SCHEMA TO `user@x.com`;",
+      "GRANT BROWSE ON t;"
+    ],
+    "c": 0,
+    "expl": "O privilegio MODIFY concede escrita (INSERT/UPDATE/DELETE/MERGE) na tabela. SELECT e so leitura.",
+    "src": "Docs: UC MODIFY privilege"
+  },
+  {
+    "dom": "gov",
+    "stem": "Voce quer que uma external table aponte para dados ja existentes em uma localizacao de object storage governada. O que precisa existir no UC?",
+    "opts": [
+      "Uma external location (e storage credential) apontando para o caminho",
+      "Apenas um cluster",
+      "Um checkpoint de streaming",
+      "Um share do Delta Sharing"
+    ],
+    "c": 0,
+    "expl": "Para tabelas/volumes external, o UC usa uma external location (baseada em uma storage credential) que define e governa o acesso ao caminho de object storage.",
+    "src": "Docs: UC external locations & storage credentials"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao sobre a diferenca entre managed e external volumes e correta?",
+    "opts": [
+      "Managed volume tem storage gerenciado pelo UC; external volume referencia um caminho externo governado por external location",
+      "Nao ha diferenca",
+      "External volume nao pode conter arquivos",
+      "Managed volume so guarda tabelas Delta"
+    ],
+    "c": 0,
+    "expl": "Assim como tabelas, volumes podem ser managed (storage gerenciado pelo UC) ou external (referenciam um caminho externo via external location). Volumes governam dados nao tabulares.",
+    "src": "Docs: UC managed vs external volumes"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a melhor pratica para conceder acesso a dados sensiveis a muitas pessoas de uma equipe?",
+    "opts": [
+      "Criar um grupo, adicionar as pessoas e conceder o privilegio ao grupo",
+      "Conceder a cada pessoa individualmente e repetir manualmente",
+      "Tornar a tabela publica",
+      "Usar ALL PRIVILEGES no metastore para todos"
+    ],
+    "c": 0,
+    "expl": "Conceder ao grupo e a pratica recomendada: administra-se o acesso em um unico lugar; adicionar/remover membros ajusta o acesso automaticamente.",
+    "src": "Docs: UC access via groups"
+  },
+  {
+    "dom": "gov",
+    "stem": "Delta Sharing permite ao provedor compartilhar quais objetos?",
+    "opts": [
+      "Tabelas, views, volumes e (conforme suporte) notebooks, sem replicar os dados",
+      "Apenas clusters",
+      "Somente arquivos CSV brutos",
+      "Apenas dashboards"
+    ],
+    "c": 0,
+    "expl": "Um share pode incluir tabelas, views, volumes, models e notebooks. Distincao que a prova cobra: no open sharing (destinatario nao-Databricks) so e possivel compartilhar tabelas em formato Delta; views, volumes, models e notebooks exigem o modo Databricks-para-Databricks. O destinatario sempre tem acesso somente-leitura.",
+    "src": "Docs: Delta Sharing shareable objects (open vs D2D)"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual e a vantagem de custo de um job cluster sobre um all-purpose cluster para cargas agendadas?",
+    "opts": [
+      "Job clusters tem preco de DBU menor e encerram ao final do job, evitando custo ocioso",
+      "All-purpose e sempre mais barato",
+      "Nao ha diferenca de custo",
+      "Job clusters nao podem rodar jobs"
+    ],
+    "c": 0,
+    "expl": "Job clusters tem taxa de DBU mais baixa que all-purpose e sao efemeros (encerram ao terminar o job), tornando-os mais economicos para cargas de producao automatizadas.",
+    "src": "Exam guide: cost of job vs all-purpose clusters"
+  },
+  {
+    "dom": "plat",
+    "stem": "Um workload precisa de compute que inicie em segundos, sem gerenciar VMs, para queries SQL de dashboards. Qual opcao?",
+    "opts": [
+      "Serverless SQL Warehouse",
+      "Job cluster classico",
+      "Cluster single-node manual",
+      "Databricks Connect"
+    ],
+    "c": 0,
+    "expl": "Serverless SQL Warehouse inicia quase instantaneamente e e totalmente gerenciado, ideal para dashboards e queries SQL interativas com boa concorrencia.",
+    "src": "Docs: serverless SQL warehouse startup"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre o Unity Catalog no contexto da plataforma e correta?",
+    "opts": [
+      "E a solucao unificada de governanca para dados e IA em todos os workspaces de uma conta",
+      "E um formato de arquivo",
+      "E um motor de execucao",
+      "E um agendador de jobs"
+    ],
+    "c": 0,
+    "expl": "Unity Catalog e a camada unificada de governanca (acesso, lineage, auditoria, discovery) para dados e ativos de IA, compartilhavel entre workspaces da mesma conta/regiao.",
+    "src": "Docs: Unity Catalog overview"
+  },
+  {
+    "dom": "plat",
+    "stem": "O que significa dizer que o Databricks separa compute de storage?",
+    "opts": [
+      "Os dados vivem em object storage barato e o compute e provisionado sob demanda de forma independente",
+      "Compute e storage sao o mesmo recurso",
+      "Os dados ficam so na memoria do cluster",
+      "Storage e sempre local ao driver"
+    ],
+    "c": 0,
+    "expl": "A arquitetura separa storage (dados em object storage aberto/barato) de compute (clusters/warehouses efemeros e escalaveis), permitindo escalar e pagar cada um independentemente.",
+    "src": "Docs: Lakehouse architecture (separation of compute and storage)"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce precisa filtrar linhas onde status = 'ativo' em PySpark. Qual e correto?",
+    "opts": [
+      "df.filter(col(\"status\") == \"ativo\")",
+      "df.groupBy(\"status\")",
+      "df.explode(\"status\")",
+      "df.agg(\"status\")"
+    ],
+    "c": 0,
+    "expl": "df.filter(col(\"status\") == \"ativo\") (ou df.where(...)) filtra as linhas pela condicao. groupBy/agg/explode tem outros propositos.",
+    "src": "Docs: PySpark filter"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando renomeia uma coluna existente em um DataFrame PySpark?",
+    "opts": [
+      "df.withColumnRenamed(\"antigo\", \"novo\")",
+      "df.rename(\"antigo\", \"novo\")",
+      "df.alterColumn(\"antigo\")",
+      "df.select(rename(...))"
+    ],
+    "c": 0,
+    "expl": "withColumnRenamed(\"antigo\", \"novo\") renomeia a coluna. rename e do pandas, nao do PySpark DataFrame.",
+    "src": "Docs: PySpark withColumnRenamed"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a forma correta de unir dois DataFrames por uma chave em PySpark?",
+    "opts": [
+      "df1.join(df2, on=\"chave\", how=\"inner\")",
+      "df1.merge(df2)",
+      "df1.union(df2)",
+      "df1.concat(df2)"
+    ],
+    "c": 0,
+    "expl": "df1.join(df2, on=\"chave\", how=\"inner\") faz o join relacional. union empilha linhas (mesmo schema); merge/concat sao de pandas.",
+    "src": "Docs: PySpark join"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando escreve um DataFrame como uma tabela Delta gerenciada?",
+    "opts": [
+      "df.write.format(\"delta\").saveAsTable(\"catalogo.schema.tabela\")",
+      "df.write.csv(\"tabela\")",
+      "df.save(\"tabela\")",
+      "df.toTable() sem argumentos"
+    ],
+    "c": 0,
+    "expl": "df.write.format(\"delta\").saveAsTable(\"cat.schema.tab\") (ou .saveAsTable com Delta como default) grava como tabela Delta gerenciada no catalogo.",
+    "src": "Docs: write Delta table"
+  },
+  {
+    "dom": "proc",
+    "stem": "Em uma agregacao, qual funcao conta o numero total de linhas por grupo?",
+    "opts": [
+      "count(\"*\")",
+      "sum(\"*\")",
+      "collect_list(\"*\")",
+      "first(\"*\")"
+    ],
+    "c": 0,
+    "expl": "count(\"*\") (ou count(\"col\")) conta linhas por grupo. Para valores distintos usa-se count_distinct.",
+    "src": "Docs: PySpark count"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e o comportamento de INSERT OVERWRITE em uma tabela Delta?",
+    "opts": [
+      "Substitui o conteudo da tabela (ou particoes) pelos novos dados, criando nova versao",
+      "Faz append sem apagar nada",
+      "So atualiza uma linha",
+      "Remove a tabela"
+    ],
+    "c": 0,
+    "expl": "INSERT OVERWRITE substitui os dados existentes (da tabela ou das particoes afetadas) pelos novos, de forma transacional (nova versao). Diferente de INSERT INTO (append).",
+    "src": "Docs: INSERT OVERWRITE"
+  },
+  {
+    "dom": "proc",
+    "stem": "Uma tabela streaming em LDP que le de uma fonte de streaming e faz append incremental e criada com:",
+    "opts": [
+      "CREATE STREAMING TABLE (ou @dlt.table lendo de readStream)",
+      "CREATE MATERIALIZED VIEW apenas",
+      "CREATE OR REPLACE TEMP VIEW",
+      "CREATE EXTERNAL TABLE"
+    ],
+    "c": 0,
+    "expl": "Em LDP, streaming tables (SQL CREATE STREAMING TABLE ou Python @dlt.table com spark.readStream) processam dados incrementalmente/append. Materialized views recomputam resultados de query.",
+    "src": "Docs: LDP streaming tables vs materialized views"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual a diferenca entre uma streaming table e uma materialized view em LDP?",
+    "opts": [
+      "Streaming table processa dados novos incrementalmente (append); materialized view mantem o resultado de uma query atualizado",
+      "Sao identicas",
+      "Materialized view nao pode ser atualizada",
+      "Streaming table so le batch"
+    ],
+    "c": 0,
+    "expl": "Streaming tables ingerem/transformam dados incrementalmente (ideal para ingestao append). Materialized views armazenam o resultado de uma consulta e o atualizam de forma incremental (ideal para transformacoes/agregacoes).",
+    "src": "Docs: LDP streaming tables & materialized views"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual expectation de LDP mantem registros invalidos mas apenas registra a violacao em metricas, sem descartar nem falhar?",
+    "opts": [
+      "EXPECT (warn - acao padrao, mantem e conta violacoes)",
+      "EXPECT ... ON VIOLATION DROP ROW",
+      "EXPECT ... ON VIOLATION FAIL UPDATE",
+      "EXPECT ... ON VIOLATION DELETE"
+    ],
+    "c": 0,
+    "expl": "Um EXPECT sem ON VIOLATION apenas registra violacoes nas metricas de qualidade (warn) e mantem os registros. DROP ROW descarta e FAIL UPDATE falha a atualizacao.",
+    "src": "Docs: LDP expectations actions"
+  },
+  {
+    "dom": "proc",
+    "stem": "Uma tabela Delta acumulou muitos arquivos pequenos por causa de writes de streaming frequentes. Alem de OPTIMIZE manual, qual recurso pode compactar automaticamente durante a escrita?",
+    "opts": [
+      "Auto compaction / optimized writes",
+      "VACUUM",
+      "Delta Sharing",
+      "Widgets"
+    ],
+    "c": 0,
+    "expl": "Optimized writes e auto compaction reduzem/consolidam arquivos pequenos automaticamente durante a escrita, mitigando o problema de small files em cargas de streaming.",
+    "src": "Docs: auto compaction / optimized writes"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL cria uma tabela a partir do resultado de uma query (materializando os dados)?",
+    "opts": [
+      "CREATE TABLE t AS SELECT ... (CTAS)",
+      "CREATE VIEW t AS SELECT ...",
+      "CREATE TEMP VIEW t AS SELECT ...",
+      "DESCRIBE t"
+    ],
+    "c": 0,
+    "expl": "CTAS (CREATE TABLE ... AS SELECT) cria e materializa uma tabela com o resultado da query. Views (temp ou nao) nao materializam dados.",
+    "src": "Docs: CTAS"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual das opcoes NAO e uma source valida diretamente suportada pelo Auto Loader?",
+    "opts": [
+      "Arquivos JSON em ADLS",
+      "Arquivos Parquet em S3",
+      "Um topico Apache Kafka",
+      "Arquivos CSV em GCS"
+    ],
+    "c": 2,
+    "expl": "O Auto Loader le arquivos de cloud object storage (ADLS, S3, GCS) em formatos como JSON/CSV/Parquet/Avro. Kafka e lido via Structured Streaming com a source kafka, nao pelo Auto Loader.",
+    "src": "Exam guide: valid Auto Loader sources"
+  },
+  {
+    "dom": "dev",
+    "stem": "Voce quer que um job reinicie automaticamente um stream Auto Loader apos ele falhar por evolucao de schema (UnknownFieldException). Como configurar?",
+    "opts": [
+      "Habilitar retries na task do job, para reiniciar o stream com o schema atualizado",
+      "Usar complete mode",
+      "Desabilitar o checkpoint",
+      "Rodar VACUUM"
+    ],
+    "c": 0,
+    "expl": "Como o Auto Loader atualiza o schema location antes de falhar, configurar retries no job faz o stream reiniciar ja com o novo schema - padrao recomendado pela Databricks.",
+    "src": "Docs: Auto Loader + Lakeflow Jobs auto-restart"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual privilegio minimo permite a um usuario apenas navegar/descobrir a existencia de objetos em um catalogo, sem le-los?",
+    "opts": [
+      "BROWSE",
+      "SELECT",
+      "MODIFY",
+      "ALL PRIVILEGES"
+    ],
+    "c": 0,
+    "expl": "O privilegio BROWSE permite descobrir metadados (existencia/estrutura) de objetos sem conceder acesso de leitura aos dados. SELECT ja le os dados.",
+    "src": "Docs: UC BROWSE privilege"
+  },
+  {
+    "dom": "gov",
+    "stem": "Um catalogo deve ser acessivel a partir de outro workspace na mesma regiao. Isso e possivel porque:",
+    "opts": [
+      "Ambos os workspaces estao atribuidos ao mesmo metastore do Unity Catalog",
+      "Cada workspace tem seu proprio metastore isolado",
+      "Catalogos sao sempre globais entre regioes",
+      "O Delta Sharing replica automaticamente"
+    ],
+    "c": 0,
+    "expl": "Workspaces da mesma regiao atribuidos ao mesmo metastore do UC compartilham catalogos e governanca. Metastores sao por regiao.",
+    "src": "Docs: UC metastore per region, multiple workspaces"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual recurso permite que a Databricks aplique automaticamente OPTIMIZE e VACUUM em tabelas gerenciadas do UC sem agendamento manual?",
+    "opts": [
+      "Predictive Optimization",
+      "Delta Sharing",
+      "Databricks Connect",
+      "Widgets"
+    ],
+    "c": 0,
+    "expl": "Predictive Optimization executa automaticamente operacoes de manutencao (como OPTIMIZE e VACUUM) em tabelas gerenciadas do UC, usando ML para decidir quando/onde, sem intervencao manual.",
+    "src": "Docs: Predictive Optimization"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma equipe precisa isolar cargas de producao de cargas de desenvolvimento no mesmo workspace. Qual abordagem de governanca ajuda?",
+    "opts": [
+      "Usar catalogos separados (ex.: prod, dev) com permissoes distintas no UC",
+      "Usar o mesmo catalogo para tudo sem permissoes",
+      "Compartilhar um unico cluster",
+      "Desabilitar o UC"
+    ],
+    "c": 0,
+    "expl": "Separar ambientes em catalogos distintos (prod/dev/staging) com permissoes proprias e uma pratica comum de governanca no UC para isolar cargas e controlar acesso.",
+    "src": "Docs: UC catalogs for environment isolation"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual funcao converte uma string de data (ex.: '2024-03-01') em tipo date em PySpark?",
+    "opts": [
+      "to_date(col(\"c\"))",
+      "date_string(col(\"c\"))",
+      "cast_date(col(\"c\"))",
+      "parse(col(\"c\"))"
+    ],
+    "c": 0,
+    "expl": "to_date() converte strings em tipo date (com formato opcional). Para timestamp usa-se to_timestamp().",
+    "src": "Docs: PySpark to_date"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e o resultado de df.select(\"a\", \"b\")?",
+    "opts": [
+      "Um novo DataFrame contendo apenas as colunas a e b",
+      "Um filtro de linhas",
+      "Uma agregacao",
+      "A tabela e sobrescrita"
+    ],
+    "c": 0,
+    "expl": "select projeta colunas, retornando um novo DataFrame apenas com as colunas indicadas. Transformacoes no Spark sao imutaveis (retornam novo DataFrame).",
+    "src": "Docs: PySpark select"
+  },
+  {
+    "dom": "proc",
+    "stem": "Transformacoes no Spark (ex.: filter, select) sao avaliadas:",
+    "opts": [
+      "De forma lazy (preguicosa); so executam quando uma acao (ex.: count, write, collect) e chamada",
+      "Imediatamente ao serem definidas",
+      "Apenas em complete mode",
+      "Somente em SQL"
+    ],
+    "c": 0,
+    "expl": "O Spark usa avaliacao lazy: transformacoes constroem um plano logico e so sao executadas quando uma acao (count, collect, write, show) e disparada. Isso permite otimizacoes do Catalyst.",
+    "src": "Docs: Spark lazy evaluation"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e a diferenca entre uma action e uma transformation no Spark?",
+    "opts": [
+      "Transformation define uma nova computacao (lazy); action dispara a execucao e retorna/grava resultado",
+      "Nao ha diferenca",
+      "Action e sempre lazy",
+      "Transformation grava em disco"
+    ],
+    "c": 0,
+    "expl": "Transformations (filter, map, join) sao lazy e retornam novo DataFrame. Actions (count, collect, write, show) disparam a execucao real do plano e produzem um resultado.",
+    "src": "Docs: Spark transformations vs actions"
+  },
+  {
+    "dom": "prod",
+    "stem": "Ao promover um bundle de dev para prod, o que muda tipicamente entre os targets?",
+    "opts": [
+      "Host do workspace, root_path, run_as e valores de variaveis especificos do ambiente",
+      "O codigo-fonte e reescrito do zero",
+      "O formato dos dados muda",
+      "Nada muda"
+    ],
+    "c": 0,
+    "expl": "Targets diferem em configuracoes de ambiente: host do workspace, root_path, run_as (identidade de execucao) e valores de variaveis - o mesmo codigo e promovido com config especifica por ambiente.",
+    "src": "Docs: DAB target customization"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre dbutils.notebook.run(\"outro\", 60, {...}) e correta?",
+    "opts": [
+      "Executa outro notebook em um contexto separado, com timeout e parametros, retornando um valor",
+      "Compartilha variaveis com o notebook atual",
+      "E identico a %run",
+      "Nao aceita parametros"
+    ],
+    "c": 0,
+    "expl": "dbutils.notebook.run(path, timeout, args) executa outro notebook em contexto isolado, com timeout e parametros, retornando o valor de dbutils.notebook.exit(). Diferente de %run, nao compartilha variaveis.",
+    "src": "Docs: dbutils.notebook.run"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual objeto do UC representa um agrupamento logico de schemas (databases)?",
+    "opts": [
+      "Catalog",
+      "Volume",
+      "Table",
+      "Share"
+    ],
+    "c": 0,
+    "expl": "Um catalog agrupa schemas (databases), que por sua vez agrupam tabelas/views/volumes/funcoes - o segundo nivel do namespace de tres partes.",
+    "src": "Docs: UC catalog"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual funcao de agregacao retorna o valor maximo de uma coluna por grupo?",
+    "opts": [
+      "max(\"col\")",
+      "top(\"col\")",
+      "greatest(\"col\")",
+      "peak(\"col\")"
+    ],
+    "c": 0,
+    "expl": "max(\"col\") retorna o maximo por grupo em uma agregacao. greatest() compara colunas na mesma linha, nao agrega.",
+    "src": "Docs: PySpark max"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce precisa preencher valores nulos de uma coluna numerica com 0. Qual metodo usar?",
+    "opts": [
+      "df.fillna(0, subset=[\"col\"]) ou df.na.fill(...)",
+      "df.dropna()",
+      "df.explode(\"col\")",
+      "df.filter(col(\"col\").isNull())"
+    ],
+    "c": 0,
+    "expl": "fillna() / na.fill() substitui nulos por um valor. dropna() removeria as linhas; filter isNull apenas seleciona os nulos.",
+    "src": "Docs: PySpark fillna"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao melhor descreve a proposta de valor do Data Intelligence Platform da Databricks?",
+    "opts": [
+      "Unifica engenharia de dados, analise, BI e IA sobre uma arquitetura lakehouse governada",
+      "E apenas um data warehouse SQL",
+      "E somente uma ferramenta de ETL",
+      "E um servico de armazenamento de arquivos"
+    ],
+    "c": 0,
+    "expl": "O Data Intelligence Platform unifica ETL/engenharia de dados, analytics/BI, streaming e IA/ML sobre um lakehouse aberto e governado (Delta + Unity Catalog), com IA embutida para simplificar tarefas.",
+    "src": "Exam guide: value of the Data Intelligence Platform"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e o beneficio de usar tasks multiplas em um unico job em vez de varios jobs encadeados manualmente?",
+    "opts": [
+      "Orquestracao unificada com dependencias, retries, compute compartilhado e visibilidade em um so lugar",
+      "Sempre e mais lento",
+      "Nao permite dependencias",
+      "Exige um cluster por task obrigatoriamente"
+    ],
+    "c": 0,
+    "expl": "Um job multi-task orquestra tudo em um DAG unico: dependencias entre tasks, retries, possibilidade de compartilhar cluster, repair run e monitoramento centralizado - melhor que encadear jobs separados manualmente.",
+    "src": "Exam guide: multi-task jobs"
+  },
+  {
+    "dom": "dev",
+    "stem": "O que a opcao cloudFiles.schemaHints permite no Auto Loader?",
+    "opts": [
+      "Fornecer tipos esperados para colunas especificas, sobrepondo a inferencia automatica",
+      "Definir o caminho do checkpoint",
+      "Trocar o formato do arquivo",
+      "Habilitar complete mode"
+    ],
+    "c": 0,
+    "expl": "cloudFiles.schemaHints permite especificar os tipos de colunas especificas, corrigindo/guiando a inferencia sem ter que declarar o schema inteiro. Divergencias resultam em resgate para _rescued_data.",
+    "src": "Docs: Auto Loader schema hints"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual comando transfere a propriedade (ownership) de uma tabela para outro principal?",
+    "opts": [
+      "ALTER TABLE t OWNER TO `grupo_dados`;",
+      "GRANT OWNER ON t TO ...;",
+      "SET OWNER t = ...;",
+      "CHANGE OWNER t ...;"
+    ],
+    "c": 0,
+    "expl": "ALTER TABLE ... OWNER TO <principal> transfere ownership. Ownership da controle total sobre o objeto.",
+    "src": "Docs: UC ALTER ... OWNER TO"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando remove fisicamente arquivos de dados obsoletos mas mantem a definicao/metadados da tabela?",
+    "opts": [
+      "VACUUM tabela",
+      "DROP TABLE tabela",
+      "TRUNCATE TABLE tabela",
+      "DELETE FROM tabela"
+    ],
+    "c": 0,
+    "expl": "VACUUM remove arquivos obsoletos nao referenciados, mantendo a tabela e seus metadados. DROP removeria a tabela; TRUNCATE esvazia os dados atuais; DELETE remove linhas especificas.",
+    "src": "Docs: VACUUM vs DROP/TRUNCATE"
+  },
+  {
+    "dom": "plat",
+    "stem": "Para uma carga de ETL pesada em batch noturno com muitos GBs, qual escolha de compute equilibra custo e desempenho?",
+    "opts": [
+      "Job cluster (ou serverless) dimensionado para o job e encerrado ao final",
+      "All-purpose cluster pequeno ligado o dia todo",
+      "SQL Warehouse XS permanente",
+      "Cluster single-node de 1 core"
+    ],
+    "c": 0,
+    "expl": "Um job cluster (ou serverless) provisionado para o job, com tamanho adequado ao volume, e encerrado ao final, oferece o melhor equilibrio de custo/desempenho para ETL batch agendado.",
+    "src": "Exam guide: compute selection for ETL batch"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual comando exibe um resumo dos recursos e o estado de deploy de um bundle?",
+    "opts": [
+      "databricks bundle summary",
+      "databricks bundle list",
+      "databricks summary",
+      "databricks bundle show"
+    ],
+    "c": 0,
+    "expl": "databricks bundle summary exibe os recursos do bundle e informacoes de deploy (ex.: para verificar o que esta gerenciado no target). Util no fluxo de operacao de bundles.",
+    "src": "Docs: databricks bundle summary"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao ingerir arquivos com Auto Loader, qual e a vantagem do modo de file notification sobre directory listing em altissimo volume?",
+    "opts": [
+      "Evita listar o diretorio inteiro a cada trigger, reagindo a eventos de novos arquivos - mais eficiente e barato em escala",
+      "E mais lento",
+      "So funciona com CSV",
+      "Nao usa checkpoint"
+    ],
+    "c": 0,
+    "expl": "No modo file notification, o Auto Loader usa servicos de notificacao da nuvem para saber de novos arquivos, evitando listar o diretorio inteiro repetidamente - mais escalavel e economico em diretorios enormes.",
+    "src": "Docs: Auto Loader file notification mode"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a forma recomendada de compartilhar dados entre duas organizacoes que ambas usam Databricks/UC?",
+    "opts": [
+      "Delta Sharing Databricks-para-Databricks",
+      "Copiar os arquivos manualmente via e-mail",
+      "Dar acesso ao cluster de producao da outra empresa",
+      "Exportar tudo para CSV e enviar"
+    ],
+    "c": 0,
+    "expl": "Delta Sharing Databricks-para-Databricks compartilha dados vivos entre organizacoes que usam UC, com governanca e sem replicacao - a forma recomendada e segura.",
+    "src": "Docs: Delta Sharing D2D"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL remove todas as linhas de uma tabela Delta mantendo sua estrutura?",
+    "opts": [
+      "TRUNCATE TABLE t ou DELETE FROM t",
+      "DROP TABLE t",
+      "VACUUM t",
+      "ALTER TABLE t"
+    ],
+    "c": 0,
+    "expl": "TRUNCATE TABLE (ou DELETE FROM sem WHERE) remove todas as linhas mantendo a tabela e o schema. DROP removeria a tabela inteira.",
+    "src": "Docs: TRUNCATE / DELETE"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre clusters single-node e correta?",
+    "opts": [
+      "Rodam driver e executor no mesmo no; uteis para cargas leves, exploracao ou ML de pequeno porte",
+      "Escalam para petabytes automaticamente",
+      "Sao sempre a melhor escolha para ETL pesado",
+      "Nao suportam Python"
+    ],
+    "c": 0,
+    "expl": "Clusters single-node executam driver e trabalho no mesmo no, adequados para cargas pequenas, exploracao ou ML leve - nao para ETL distribuido pesado, que exige multiplos workers.",
+    "src": "Docs: single-node clusters"
+  },
+  {
+    "dom": "prod",
+    "stem": "Um pipeline LDP em producao deve reprocessar tudo do zero por uma correcao de logica. Qual conceito permite isso em LDP?",
+    "opts": [
+      "Full refresh do pipeline/tabela",
+      "Repair run apenas",
+      "VACUUM",
+      "BROWSE"
+    ],
+    "c": 0,
+    "expl": "Um full refresh reprocessa completamente a tabela/pipeline (limpa o estado e recomputa), util apos mudancas de logica. Uma atualizacao normal e incremental.",
+    "src": "Docs: LDP full refresh"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao configurar Auto Loader em um pipeline LDP, o que a Databricks gerencia automaticamente?",
+    "opts": [
+      "O schema location e o checkpoint",
+      "Nada; deve ser manual",
+      "Apenas o formato do arquivo",
+      "Somente as permissoes"
+    ],
+    "c": 0,
+    "expl": "Em pipelines LDP, o Databricks gerencia automaticamente o schema location e outras informacoes de checkpoint do Auto Loader, simplificando a configuracao.",
+    "src": "Docs: Auto Loader in Lakeflow pipelines"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual recurso permite descobrir e pesquisar ativos de dados (tabelas, colunas) governados no workspace?",
+    "opts": [
+      "Catalog Explorer",
+      "Spark UI",
+      "Delta Sharing",
+      "Widgets"
+    ],
+    "c": 0,
+    "expl": "O Catalog Explorer permite navegar, pesquisar e inspecionar catalogos, schemas, tabelas, colunas, permissoes, lineage e historico - a interface de descoberta e governanca do UC.",
+    "src": "Docs: Catalog Explorer"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual metodo persiste um DataFrame na memoria/disco para reuso, evitando recomputacao em acoes repetidas?",
+    "opts": [
+      "df.cache() / df.persist()",
+      "df.explode()",
+      "df.drop()",
+      "df.show()"
+    ],
+    "c": 0,
+    "expl": "cache()/persist() materializam o DataFrame em memoria (e/ou disco) apos a primeira acao, evitando recomputar o plano em usos subsequentes - util quando o mesmo DataFrame e reutilizado.",
+    "src": "Docs: Spark cache/persist"
+  },
+  {
+    "dom": "prod",
+    "stem": "Ao usar serverless para jobs, qual responsabilidade deixa de ser do usuario?",
+    "opts": [
+      "Dimensionar, provisionar e otimizar o cluster (VMs, workers, autoscaling)",
+      "Escrever a logica do pipeline",
+      "Definir dependencias entre tasks",
+      "Configurar permissoes no UC"
+    ],
+    "c": 0,
+    "expl": "Com serverless, a Databricks assume o provisionamento, dimensionamento e otimizacao do compute. O usuario continua responsavel pela logica, orquestracao e governanca.",
+    "src": "Exam guide: serverless (hands-off compute)"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual comando em um notebook instala uma biblioteca Python apenas para a sessao/notebook atual?",
+    "opts": [
+      "%pip install nome_da_lib",
+      "%sql install lib",
+      "%md install",
+      "%fs pip install"
+    ],
+    "c": 0,
+    "expl": "%pip install instala bibliotecas Python no escopo do notebook (notebook-scoped libraries), sem afetar todo o cluster permanentemente.",
+    "src": "Docs: %pip notebook-scoped libraries"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e o proposito de uma storage credential no Unity Catalog?",
+    "opts": [
+      "Encapsular a autenticacao (ex.: IAM role/managed identity) usada para acessar object storage externo",
+      "Armazenar senhas de usuarios",
+      "Definir o schema de uma tabela",
+      "Agendar jobs"
+    ],
+    "c": 0,
+    "expl": "Uma storage credential encapsula o mecanismo de autenticacao na nuvem (IAM role, managed identity, service principal) que o UC usa para acessar object storage externo - base das external locations.",
+    "src": "Docs: UC storage credentials"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL descreve o schema (colunas e tipos) de uma tabela?",
+    "opts": [
+      "DESCRIBE tabela (ou DESCRIBE TABLE tabela)",
+      "DESCRIBE HISTORY tabela",
+      "SHOW COLUMNS FROM HISTORY",
+      "VACUUM tabela"
+    ],
+    "c": 0,
+    "expl": "DESCRIBE tabela mostra colunas e tipos. DESCRIBE HISTORY mostra o historico de versoes; DESCRIBE DETAIL mostra metadados fisicos (localizacao, numero de arquivos).",
+    "src": "Docs: DESCRIBE TABLE"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual das opcoes e um beneficio de usar Delta Lake como formato padrao de tabelas no lakehouse?",
+    "opts": [
+      "Transacoes ACID, time travel, enforcement/evolucao de schema e desempenho com data skipping",
+      "Impede qualquer atualizacao de dados",
+      "Remove a necessidade de compute",
+      "So permite dados CSV"
+    ],
+    "c": 0,
+    "expl": "Delta Lake traz ACID, time travel (versionamento), enforcement e evolucao de schema, e otimizacoes como data skipping/Z-order - pilares de confiabilidade e performance do lakehouse.",
+    "src": "Docs: Delta Lake benefits"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e a ordem correta do fluxo tipico de trabalho com um Databricks Asset Bundle?",
+    "opts": [
+      "validate -> deploy -> run",
+      "run -> deploy -> validate",
+      "deploy -> validate -> run",
+      "run -> validate -> deploy"
+    ],
+    "c": 0,
+    "expl": "O fluxo padrao e: databricks bundle validate (checa a config) -> deploy (envia recursos ao workspace) -> run (executa um recurso, ex.: job).",
+    "src": "Docs: DAB workflow validate/deploy/run"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre a source cloudFiles e streaming e correta?",
+    "opts": [
+      "Auto Loader e construido sobre Structured Streaming; cada workload e essencialmente um stream com estado de checkpoint",
+      "Auto Loader e batch puro sem checkpoint",
+      "Auto Loader nao tolera falhas",
+      "Auto Loader so processa um arquivo por vez, sem estado"
+    ],
+    "c": 0,
+    "expl": "O Auto Loader e implementado sobre Structured Streaming: mantem estado no checkpoint, garante processamento incremental tolerante a falhas e exactly-once dos arquivos, mesmo com triggers batch como availableNow.",
+    "src": "Docs: Auto Loader built on Structured Streaming"
+  },
+  {
+    "dom": "gov",
+    "stem": "Voce precisa mascarar/limitar acesso a colunas sensiveis (ex.: CPF) para certos grupos. Qual recurso do UC ajuda?",
+    "opts": [
+      "Column masks e row filters (controle de acesso a nivel de coluna/linha)",
+      "OPTIMIZE",
+      "Delta Sharing",
+      "Widgets"
+    ],
+    "c": 0,
+    "expl": "O UC suporta column masks e row filters para aplicar mascaramento de colunas e filtragem de linhas com base em quem consulta - controle de acesso fino sobre dados sensiveis.",
+    "src": "Docs: UC row filters and column masks"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e o resultado de df.withColumn(\"total\", col(\"preco\") * col(\"qtd\"))?",
+    "opts": [
+      "Um novo DataFrame com a coluna calculada 'total' adicionada",
+      "Uma agregacao por grupo",
+      "A tabela e ordenada",
+      "As linhas sao filtradas"
+    ],
+    "c": 0,
+    "expl": "withColumn adiciona (ou substitui) uma coluna com base em uma expressao - aqui, 'total' = preco x qtd - retornando um novo DataFrame.",
+    "src": "Docs: PySpark withColumn"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre auto-scaling de clusters e correta?",
+    "opts": [
+      "O cluster ajusta o numero de workers entre um minimo e maximo conforme a carga",
+      "O cluster sempre usa o numero maximo de workers",
+      "Auto-scaling desabilita o Photon",
+      "Auto-scaling so funciona em single-node"
+    ],
+    "c": 0,
+    "expl": "Auto-scaling adiciona/remove workers dinamicamente entre limites configurados conforme a demanda da carga, equilibrando desempenho e custo.",
+    "src": "Docs: cluster autoscaling"
+  },
+  {
+    "dom": "prod",
+    "stem": "Uma task de job falha intermitentemente por indisponibilidade de um servico externo. Qual configuracao e a mais apropriada?",
+    "opts": [
+      "Definir retries com intervalo entre tentativas",
+      "Aumentar o numero de workers",
+      "Trocar para complete mode",
+      "Remover a dependencia entre tasks"
+    ],
+    "c": 0,
+    "expl": "Retries com backoff/intervalo entre tentativas lidam bem com falhas transitorias de dependencias externas, reexecutando a task automaticamente sem intervencao.",
+    "src": "Docs: Jobs retries with interval"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e o comportamento padrao de trigger de uma query de streaming quando nenhum trigger e especificado?",
+    "opts": [
+      "Processa micro-batches o mais rapido possivel, assim que o anterior termina",
+      "Processa uma vez e encerra",
+      "Processa a cada 5 minutos fixos",
+      "Nao processa nada"
+    ],
+    "c": 0,
+    "expl": "Sem trigger explicito, o Structured Streaming usa micro-batches disparados assim que o batch anterior conclui (menor latencia possivel). availableNow processa uma vez; processingTime usa intervalos fixos.",
+    "src": "Docs: Structured Streaming default trigger"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual comando lista as permissoes (grants) atuais sobre uma tabela no UC?",
+    "opts": [
+      "SHOW GRANTS ON TABLE t",
+      "DESCRIBE HISTORY t",
+      "LIST PERMISSIONS t",
+      "SHOW PRIVILEGES"
+    ],
+    "c": 0,
+    "expl": "SHOW GRANTS ON <objeto> lista os privilegios concedidos sobre o objeto e a quem. Util para auditar acesso.",
+    "src": "Docs: SHOW GRANTS"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL cria um schema (database) dentro de um catalogo?",
+    "opts": [
+      "CREATE SCHEMA prod.vendas",
+      "CREATE DATABASE TABLE vendas",
+      "CREATE CATALOG vendas",
+      "CREATE VIEW vendas"
+    ],
+    "c": 0,
+    "expl": "CREATE SCHEMA <catalogo>.<schema> (equivalente a CREATE DATABASE) cria o schema no catalogo. CREATE CATALOG cria o nivel acima.",
+    "src": "Docs: CREATE SCHEMA"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual e a principal razao para preferir Liquid Clustering a particionamento tradicional em tabelas grandes e evolutivas?",
+    "opts": [
+      "Evita o problema de particoes enviesadas/pequenas e permite mudar as chaves de clustering sem reescrever tudo",
+      "E sempre mais lento",
+      "Elimina a necessidade de compute",
+      "So funciona com CSV"
+    ],
+    "c": 0,
+    "expl": "Liquid Clustering evita armadilhas do particionamento (particoes muito pequenas ou enviesadas) e permite alterar as chaves de clustering de forma flexivel sem reescrever a tabela inteira, adaptando-se a evolucao das queries.",
+    "src": "Docs: Liquid Clustering vs partitioning"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual das opcoes descreve corretamente o papel do deploy versus run em bundles?",
+    "opts": [
+      "deploy envia/atualiza os arquivos e recursos no workspace; run inicia a execucao de um recurso",
+      "Sao o mesmo comando",
+      "deploy executa o job",
+      "run valida a config"
+    ],
+    "c": 0,
+    "expl": "deploy sincroniza os arquivos e cria/atualiza os recursos definidos no bundle no workspace; run efetivamente dispara a execucao de um recurso (ex.: um job) ja implantado.",
+    "src": "Docs: DAB deploy vs run"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual opcao do Auto Loader controla a localizacao onde o schema inferido e rastreado ao longo do tempo?",
+    "opts": [
+      "cloudFiles.schemaLocation",
+      "checkpointLocation apenas",
+      "cloudFiles.format",
+      "maxFilesPerTrigger"
+    ],
+    "c": 0,
+    "expl": "cloudFiles.schemaLocation define o diretorio que armazena e evolui o schema inferido. Pode coincidir com o checkpointLocation, mas e a opcao especifica do schema.",
+    "src": "Docs: Auto Loader schemaLocation"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao sobre views no UC e seguranca e correta?",
+    "opts": [
+      "Views podem restringir/derivar dados, permitindo conceder acesso a view sem dar acesso direto as tabelas base",
+      "Views expoem sempre todas as colunas das tabelas base",
+      "Views nao podem ter permissoes",
+      "Views so funcionam em streaming"
+    ],
+    "c": 0,
+    "expl": "Views permitem expor apenas parte dos dados (colunas/linhas filtradas) e conceder SELECT na view sem dar acesso as tabelas subjacentes - um padrao de seguranca comum (dynamic views para mascaramento).",
+    "src": "Docs: UC views for access control"
+  },
+  {
+    "dom": "proc",
+    "stem": "Voce precisa ordenar um DataFrame por 'data' descendente. Qual e correto?",
+    "opts": [
+      "df.orderBy(col(\"data\").desc())",
+      "df.sort(\"data\", ascending=True) apenas",
+      "df.groupBy(\"data\")",
+      "df.filter(\"data\")"
+    ],
+    "c": 0,
+    "expl": "orderBy(col(\"data\").desc()) (ou sort com ascending=False) ordena de forma descendente. groupBy/filter nao ordenam.",
+    "src": "Docs: PySpark orderBy"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre o DBFS (Databricks File System) no contexto atual e mais correta?",
+    "opts": [
+      "E uma camada de abstracao sobre object storage; para dados governados, a Databricks recomenda Volumes do UC",
+      "Substitui completamente o Unity Catalog",
+      "E o motor de execucao",
+      "So armazena notebooks"
+    ],
+    "c": 0,
+    "expl": "DBFS e uma abstracao de filesystem sobre object storage. Para dados governados e nao tabulares, a recomendacao atual e usar Volumes do Unity Catalog em vez de caminhos DBFS legados.",
+    "src": "Docs: DBFS / UC Volumes recommendation"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e a vantagem de definir clusters/compute como codigo no bundle (em vez de referenciar um cluster existente pela UI)?",
+    "opts": [
+      "Reprodutibilidade e consistencia do ambiente de execucao entre deploys/ambientes",
+      "Impede o uso de serverless",
+      "Torna o job mais lento",
+      "Remove a necessidade de codigo-fonte"
+    ],
+    "c": 0,
+    "expl": "Definir o compute como codigo (job clusters no YAML) garante que cada deploy use a mesma configuracao reproduzivel, evitando dependencia de clusters criados manualmente e drift entre ambientes.",
+    "src": "Docs: DAB job clusters as code"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a maneira recomendada de ingerir arquivos que chegam de forma esporadica e disparar o processamento apenas quando novos arquivos aparecem?",
+    "opts": [
+      "Job com file arrival trigger (ou Auto Loader com availableNow agendado)",
+      "Polling manual",
+      "Complete mode continuo 24/7",
+      "Delta Sharing"
+    ],
+    "c": 0,
+    "expl": "Para chegada esporadica, um file arrival trigger no job (ou Auto Loader com availableNow agendado) processa eficientemente so quando ha dados novos, evitando compute continuo ocioso.",
+    "src": "Docs: file arrival trigger / availableNow"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e o efeito de conceder SELECT em um catalogo inteiro no UC?",
+    "opts": [
+      "Concede leitura em todos os objetos aplicaveis do catalogo, inclusive schemas/tabelas futuros",
+      "Concede escrita em tudo",
+      "Nao tem efeito",
+      "So se aplica a uma tabela"
+    ],
+    "c": 0,
+    "expl": "Privilegios no UC sao herdados para baixo na hierarquia: SELECT concedido no catalogo se aplica aos schemas e tabelas contidos, inclusive os criados posteriormente.",
+    "src": "Docs: UC privilege inheritance"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando muda o tipo de uma coluna existente em uma tabela Delta (quando suportado)?",
+    "opts": [
+      "ALTER TABLE t ALTER COLUMN ... / recriar com novo tipo conforme regras de evolucao",
+      "UPDATE t SET tipo=...",
+      "CAST TABLE t",
+      "MODIFY COLUMN t"
+    ],
+    "c": 0,
+    "expl": "Alteracoes de tipo em Delta seguem regras de evolucao de schema (algumas exigem reescrita/overwrite com overwriteSchema). ALTER TABLE e o DDL base; mudancas incompativeis podem exigir recriar/overwrite.",
+    "src": "Docs: Delta schema evolution / ALTER"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre Databricks Runtime e correta?",
+    "opts": [
+      "E o conjunto de componentes (Spark, bibliotecas, otimizacoes) que roda nos clusters; versoes LTS tem suporte estendido",
+      "E um formato de arquivo",
+      "E o mesmo que Unity Catalog",
+      "E um tipo de tabela"
+    ],
+    "c": 0,
+    "expl": "O Databricks Runtime e a imagem que roda nos clusters, incluindo Apache Spark, Photon (quando habilitado), Delta e bibliotecas. Versoes LTS (Long Term Support) recebem suporte por mais tempo, importante para producao.",
+    "src": "Docs: Databricks Runtime / LTS"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e o beneficio de usar um service principal como run_as em producao num bundle?",
+    "opts": [
+      "Execucao com identidade nao humana estavel, evitando dependencia de um usuario especifico e melhorando seguranca/automacao",
+      "Torna o deploy mais lento",
+      "Elimina a necessidade de permissoes",
+      "Desabilita o Git"
+    ],
+    "c": 0,
+    "expl": "Usar um service principal como identidade de execucao em producao evita atrelar jobs a um usuario pessoal (que pode sair da empresa), melhora a seguranca e e adequado para automacao/CI-CD.",
+    "src": "Docs: DAB run_as service principal"
+  },
+  {
+    "dom": "dev",
+    "stem": "Ao depurar um notebook, qual recurso ajuda a inspecionar o valor de variaveis e resultados intermediarios passo a passo?",
+    "opts": [
+      "Executar celulas individualmente e usar display()/print() dos resultados intermediarios",
+      "Rodar VACUUM",
+      "Usar Delta Sharing",
+      "Aplicar ZORDER"
+    ],
+    "c": 0,
+    "expl": "A execucao celula a celula, combinada com display()/print() de resultados intermediarios e a Spark UI, e a forma built-in de depurar e inspecionar estado em notebooks.",
+    "src": "Exam guide: built-in debugging tools"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a diferenca entre um catalogo comum e o catalogo de sistema (system) no UC?",
+    "opts": [
+      "O catalogo system expoe metadados operacionais e de governanca (ex.: audit logs, lineage, billing) via system tables",
+      "Sao identicos",
+      "O system catalog guarda dados de negocio",
+      "O system catalog nao pode ser consultado"
+    ],
+    "c": 0,
+    "expl": "O catalogo system disponibiliza system tables com informacoes operacionais e de governanca (audit, lineage, billing/usage, etc.), consultaveis via SQL para monitoramento e auditoria.",
+    "src": "Docs: UC system tables"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL faz o merge de dados de mudanca tratando tambem exclusoes (DELETE) na fonte?",
+    "opts": [
+      "MERGE ... WHEN MATCHED AND fonte.op='D' THEN DELETE WHEN MATCHED THEN UPDATE WHEN NOT MATCHED THEN INSERT",
+      "DELETE FROM alvo apenas",
+      "INSERT OVERWRITE",
+      "TRUNCATE"
+    ],
+    "c": 0,
+    "expl": "O MERGE suporta multiplas clausulas WHEN MATCHED com condicoes, permitindo DELETE quando a fonte indica exclusao, UPDATE para alteracoes e INSERT para novos - padrao de CDC/upsert completo.",
+    "src": "Docs: Delta MERGE with delete (CDC)"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao melhor descreve quando usar um SQL Warehouse em vez de um cluster de proposito geral?",
+    "opts": [
+      "Para cargas SQL/BI e dashboards; o warehouse e otimizado e gerenciado para consultas SQL",
+      "Para desenvolvimento Python interativo em notebooks",
+      "Para treinar modelos de deep learning",
+      "Para rodar pipelines LDP de streaming"
+    ],
+    "c": 0,
+    "expl": "SQL Warehouses sao otimizados para cargas SQL/BI (dashboards, consultas de analistas), com bom desempenho e concorrencia. Desenvolvimento Python interativo e ML usam all-purpose clusters.",
+    "src": "Exam guide: SQL Warehouse use case"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e a maneira correta de parametrizar um job para rodar com valores diferentes (ex.: uma data de processamento) por execucao?",
+    "opts": [
+      "Usar parametros de job/task (ex.: widgets ou job parameters) passados na execucao",
+      "Hardcodar o valor no notebook",
+      "Criar um job novo a cada execucao",
+      "Usar VACUUM"
+    ],
+    "c": 0,
+    "expl": "Job/task parameters (e widgets no notebook) permitem passar valores dinamicos por execucao (como a data de processamento), tornando o job reutilizavel sem alterar o codigo.",
+    "src": "Exam guide: parameterizing jobs"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre a coluna _rescued_data e schema fornecido e correta?",
+    "opts": [
+      "Mesmo com schema fornecido, dados que nao se encaixam podem ser resgatados nela, preservando-os para inspecao",
+      "Ela so existe se nenhum schema for fornecido",
+      "Ela armazena o checkpoint",
+      "Ela substitui o schemaLocation"
+    ],
+    "c": 0,
+    "expl": "A coluna de dados resgatados captura valores que nao correspondem ao schema esperado (tipos divergentes, campos inesperados), preservando-os em vez de perde-los - util mesmo quando um schema/hint e fornecido.",
+    "src": "Docs: Auto Loader rescued data with provided schema"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a melhor forma de garantir que dados de producao nao sejam acidentalmente alterados por analistas?",
+    "opts": [
+      "Conceder apenas SELECT (leitura) aos analistas, reservando MODIFY a papeis de engenharia",
+      "Dar ALL PRIVILEGES a todos",
+      "Nao usar permissoes",
+      "Compartilhar o owner com todos"
+    ],
+    "c": 0,
+    "expl": "Aplicar o principio do menor privilegio: analistas recebem so SELECT; escrita (MODIFY) fica restrita a engenharia/servico. Isso previne alteracoes acidentais em producao.",
+    "src": "Docs: UC least privilege"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando cria uma tabela Delta particionada por uma coluna de data?",
+    "opts": [
+      "CREATE TABLE t (...) PARTITIONED BY (dt)",
+      "CREATE TABLE t (...) ZORDER (dt)",
+      "CREATE TABLE t (...) CLUSTER (dt)",
+      "PARTITION TABLE t BY dt"
+    ],
+    "c": 0,
+    "expl": "PARTITIONED BY (coluna) na criacao define o particionamento fisico. (Para tabelas novas, a Databricks recomenda Liquid Clustering em vez de particionamento manual em muitos casos.)",
+    "src": "Docs: CREATE TABLE PARTITIONED BY"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual e a vantagem principal de armazenar dados em formato aberto (ex.: Delta/Parquet) no lakehouse?",
+    "opts": [
+      "Evita lock-in; os dados ficam acessiveis por multiplos engines e ferramentas, nao presos a um formato proprietario",
+      "Impede o uso de SQL",
+      "Torna os dados ilegiveis",
+      "So funciona com um unico fornecedor"
+    ],
+    "c": 0,
+    "expl": "Formatos abertos (Delta Lake, Parquet) evitam vendor lock-in: os dados permanecem acessiveis por diversos engines/ferramentas do ecossistema, um pilar da proposta do lakehouse.",
+    "src": "Docs: open formats in the lakehouse"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual metrica na Spark UI ajuda a identificar spill (dados transbordando para disco) em uma task?",
+    "opts": [
+      "Spill (memory/disk) nas metricas do stage/task",
+      "O nome do usuario",
+      "O numero de catalogos",
+      "O tamanho do schemaLocation"
+    ],
+    "c": 0,
+    "expl": "As metricas de spill (memory/disk) na Spark UI indicam que dados excederam a memoria e transbordaram para disco - sinal de pressao de memoria, muitas vezes ligado a skew ou shuffles grandes.",
+    "src": "Docs: Spark UI spill metrics"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a diferenca entre ingestao em batch e em streaming, do ponto de vista do exame?",
+    "opts": [
+      "Batch processa um conjunto finito periodicamente; streaming processa dados continuamente conforme chegam",
+      "Nao ha diferenca",
+      "Streaming so usa CSV",
+      "Batch nao pode usar Delta"
+    ],
+    "c": 0,
+    "expl": "Batch processa dados finitos em intervalos (ex.: diariamente). Streaming (incluindo Auto Loader) processa dados incrementalmente e continuamente conforme chegam, com estado/checkpoint.",
+    "src": "Exam guide: batch vs streaming ingestion"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual comando permite ver a linhagem de uma tabela programaticamente ou pela interface?",
+    "opts": [
+      "Consultar as system tables de lineage ou usar a aba Lineage no Catalog Explorer",
+      "DESCRIBE HISTORY",
+      "SHOW GRANTS",
+      "VACUUM"
+    ],
+    "c": 0,
+    "expl": "A linhagem pode ser vista na aba Lineage do Catalog Explorer ou consultada via system tables de lineage - mostrando dependencias upstream/downstream de tabelas e colunas.",
+    "src": "Docs: UC lineage (Catalog Explorer / system tables)"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e o resultado de aplicar .distinct() a um DataFrame?",
+    "opts": [
+      "Retorna um DataFrame apenas com linhas unicas (remove duplicatas completas)",
+      "Ordena o DataFrame",
+      "Conta as linhas",
+      "Explode uma coluna"
+    ],
+    "c": 0,
+    "expl": "distinct() retorna as linhas distintas (remove duplicatas considerando todas as colunas). Para deduplicar por subconjunto de colunas, usa-se dropDuplicates([...]).",
+    "src": "Docs: PySpark distinct"
+  },
+  {
+    "dom": "plat",
+    "stem": "Uma organizacao quer governanca unificada de dados e IA entre AWS e Azure. Qual capacidade viabiliza compartilhamento entre nuvens?",
+    "opts": [
+      "Delta Sharing (com atencao a custos de egress entre nuvens)",
+      "Apenas DBFS local",
+      "Um unico cluster all-purpose",
+      "VACUUM"
+    ],
+    "c": 0,
+    "expl": "Delta Sharing permite compartilhar dados entre nuvens/plataformas via protocolo aberto; deve-se considerar custos de transferencia (egress) e latencia ao compartilhar entre nuvens.",
+    "src": "Exam guide: cross-cloud data sharing"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e o proposito de definir root_path no target de producao de um bundle?",
+    "opts": [
+      "Garantir um unico local de deploy controlado, evitando multiplas copias e conflitos em producao",
+      "Definir o schema das tabelas",
+      "Escolher o formato dos arquivos",
+      "Habilitar o Photon"
+    ],
+    "c": 0,
+    "expl": "Em modo producao, definir workspace.root_path garante que apenas uma copia do bundle seja implantada em um caminho controlado (restrito a identidade de deploy), evitando conflitos - sem ele, o deploy pode falhar.",
+    "src": "Docs: DAB production root_path"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL insere o resultado de uma query em uma tabela existente (append)?",
+    "opts": [
+      "INSERT INTO t SELECT ... FROM origem",
+      "SELECT INTO t ...",
+      "APPEND t SELECT ...",
+      "MERGE t SELECT ..."
+    ],
+    "c": 0,
+    "expl": "INSERT INTO t SELECT ... faz append do resultado da query na tabela. INSERT OVERWRITE substituiria; MERGE faz upsert.",
+    "src": "Docs: INSERT INTO ... SELECT"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre a leitura de um diretorio com muitos formatos misturados pelo Auto Loader e correta?",
+    "opts": [
+      "Voce deve especificar um unico cloudFiles.format; misturar formatos incompativeis na mesma stream nao e suportado",
+      "Ele detecta e mistura todos os formatos automaticamente",
+      "Ele ignora o formato",
+      "Ele converte tudo para CSV"
+    ],
+    "c": 0,
+    "expl": "Cada stream do Auto Loader le um unico formato definido em cloudFiles.format. Diretorios com formatos heterogeneos exigem streams/configuracoes separadas por formato.",
+    "src": "Docs: Auto Loader single format per stream"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e o beneficio de conceder acesso via view dinamica que filtra por grupo do usuario?",
+    "opts": [
+      "Diferentes usuarios veem diferentes subconjuntos de dados a partir da mesma view, sem duplicar tabelas",
+      "Todos veem os mesmos dados sempre",
+      "A view nao pode filtrar",
+      "Elimina a necessidade de permissoes"
+    ],
+    "c": 0,
+    "expl": "Dynamic views usam funcoes como is_account_group_member() para retornar/mascarar dados conforme o grupo do usuario - seguranca a nivel de linha/coluna sem manter copias separadas por grupo.",
+    "src": "Docs: UC dynamic views"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a forma correta de ler uma tabela do catalogo em PySpark?",
+    "opts": [
+      "spark.table(\"catalogo.schema.tabela\") ou spark.read.table(...)",
+      "spark.open(\"tabela\")",
+      "spark.load(\"tabela\")",
+      "spark.get(\"tabela\")"
+    ],
+    "c": 0,
+    "expl": "spark.table(\"cat.schema.tab\") (ou spark.read.table(...)) le uma tabela registrada no catalogo como DataFrame.",
+    "src": "Docs: spark.table"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre a escolha entre serverless e compute classico e mais correta?",
+    "opts": [
+      "Serverless reduz gestao e startup, ideal quando se quer hands-off; classico da mais controle sobre a configuracao do cluster",
+      "Classico e sempre melhor",
+      "Serverless nao escala",
+      "Nao ha trade-offs"
+    ],
+    "c": 0,
+    "expl": "Serverless e hands-off (sem gerenciar VMs, startup rapido), otimo para simplicidade e picos. Compute classico oferece mais controle e customizacao de cluster quando necessario. A escolha depende do caso.",
+    "src": "Exam guide: serverless vs classic compute"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e uma boa pratica ao estruturar um bundle para multiplos ambientes?",
+    "opts": [
+      "Definir targets (dev/staging/prod) com variaveis e overrides especificos, mantendo o mesmo codigo-base",
+      "Duplicar todo o codigo por ambiente",
+      "Usar valores hardcoded por ambiente no codigo",
+      "Nao separar ambientes"
+    ],
+    "c": 0,
+    "expl": "A pratica recomendada e um unico codigo-base com multiplos targets, usando variaveis e overrides por target para diferencas de ambiente (host, paths, tamanho de cluster) - promovendo dev->staging->prod de forma consistente.",
+    "src": "Docs: DAB multi-target best practices"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual afirmacao sobre dbutils.fs e correta?",
+    "opts": [
+      "Fornece utilitarios para interagir com o filesystem (listar, copiar, mover, remover arquivos)",
+      "Executa queries SQL",
+      "Cria jobs",
+      "Gerencia permissoes do UC"
+    ],
+    "c": 0,
+    "expl": "dbutils.fs oferece operacoes de filesystem (ls, cp, mv, rm, mkdirs, head) sobre object storage/DBFS - util para inspecionar e manipular arquivos de origem em fluxos de ingestao.",
+    "src": "Docs: dbutils.fs"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e a consequencia de dar DROP em uma tabela managed do Unity Catalog?",
+    "opts": [
+      "Os metadados e os arquivos de dados subjacentes sao removidos",
+      "Apenas os metadados sao removidos",
+      "Nada acontece",
+      "Os dados vao para _rescued_data"
+    ],
+    "c": 0,
+    "expl": "Para tabelas managed, o UC gerencia os dados; DROP TABLE remove metadados e os arquivos de dados subjacentes. (Em external, so os metadados saem.)",
+    "src": "Exam guide: managed table DROP behavior"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL cria uma tabela Delta a partir de arquivos Parquet existentes, convertendo-os?",
+    "opts": [
+      "CONVERT TO DELTA parquet.`/caminho`",
+      "ALTER FORMAT TO DELTA",
+      "CAST TABLE TO DELTA",
+      "OPTIMIZE parquet"
+    ],
+    "c": 0,
+    "expl": "CONVERT TO DELTA parquet.`/caminho` converte arquivos Parquet existentes em uma tabela Delta in-place (adicionando o transaction log), sem reescrever os dados.",
+    "src": "Docs: CONVERT TO DELTA"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual e o papel do Catalyst optimizer no Spark?",
+    "opts": [
+      "Otimiza automaticamente os planos de consulta (logico e fisico) para melhorar o desempenho",
+      "Armazena os dados",
+      "Gerencia permissoes",
+      "Cria clusters"
+    ],
+    "c": 0,
+    "expl": "O Catalyst e o otimizador de consultas do Spark: transforma o plano logico em um plano fisico eficiente (predicate pushdown, reordenacao de joins, etc.), melhorando o desempenho automaticamente.",
+    "src": "Docs: Spark Catalyst optimizer"
+  },
+  {
+    "dom": "prod",
+    "stem": "Ao rerodar um job com 'Repair run', o que acontece com as tasks que ja haviam sido concluidas com sucesso?",
+    "opts": [
+      "Sao puladas; apenas a task que falhou e suas dependentes sao reexecutadas",
+      "Todas sao reexecutadas do zero",
+      "O job inteiro e deletado",
+      "Nada e executado"
+    ],
+    "c": 0,
+    "expl": "O 'Repair run' reaproveita os resultados das tasks bem-sucedidas e reexecuta apenas a task que falhou (e as que dependem dela), economizando tempo e recursos.",
+    "src": "Exam guide: repair run behavior"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a maneira recomendada de lidar com arquivos corrompidos/malformados durante a ingestao, sem falhar o job inteiro?",
+    "opts": [
+      "Usar modos de leitura tolerantes (ex.: PERMISSIVE / rescued data) para isolar registros problematicos",
+      "Deletar todos os dados",
+      "Ignorar o checkpoint",
+      "Rodar VACUUM"
+    ],
+    "c": 0,
+    "expl": "Modos tolerantes (PERMISSIVE com _corrupt_record, ou a coluna de dados resgatados do Auto Loader) isolam registros problematicos em vez de falhar o job, permitindo inspeciona-los depois.",
+    "src": "Docs: handling corrupt records / rescued data"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual afirmacao sobre a heranca de privilegios no UC esta correta?",
+    "opts": [
+      "Privilegios concedidos em um nivel superior (catalogo/schema) sao herdados pelos objetos abaixo",
+      "Cada tabela exige grant individual sempre",
+      "Nao ha heranca",
+      "Heranca so ocorre em views"
+    ],
+    "c": 0,
+    "expl": "O modelo do UC herda privilegios para baixo: um grant no catalogo se aplica a seus schemas e tabelas; um grant no schema se aplica as suas tabelas - inclusive objetos futuros.",
+    "src": "Docs: UC privilege inheritance"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a diferenca entre cache() e escrever a tabela em disco?",
+    "opts": [
+      "cache() mantem o resultado na memoria do cluster durante a sessao; escrever persiste os dados de forma duravel no storage",
+      "Sao identicos",
+      "cache() e permanente",
+      "Escrever apaga os dados"
+    ],
+    "c": 0,
+    "expl": "cache() mantem o DataFrame em memoria (efemero, ligado a sessao/cluster) para acelerar reusos. Escrever (write.saveAsTable) persiste duravelmente os dados no storage como tabela.",
+    "src": "Docs: cache vs persist to storage"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual e uma razao para usar um cluster com Photon habilitado?",
+    "opts": [
+      "Acelerar consultas SQL/DataFrame com execucao vetorizada, reduzindo tempo e custo",
+      "Desabilitar o Spark",
+      "Impedir queries SQL",
+      "Remover o Unity Catalog"
+    ],
+    "c": 0,
+    "expl": "Photon acelera cargas SQL e de DataFrame com execucao vetorizada nativa, frequentemente reduzindo tempo de execucao e custo por consulta em cargas compativeis.",
+    "src": "Docs: Photon benefits"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual comando sincroniza o estado atual de um app/recurso ja existente com a definicao do bundle (binding)?",
+    "opts": [
+      "databricks bundle deployment bind ...",
+      "databricks bundle validate",
+      "databricks bundle run",
+      "databricks bundle destroy"
+    ],
+    "c": 0,
+    "expl": "databricks bundle deployment bind associa (bind) um recurso existente ao bundle, para que ele passe a ser gerenciado por ele - util ao adotar bundles para recursos criados fora deles.",
+    "src": "Docs: DAB deployment bind"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual das opcoes e a melhor pratica para o schemaLocation de diferentes streams do Auto Loader?",
+    "opts": [
+      "Usar um diretorio de schemaLocation distinto por stream/tabela alvo",
+      "Compartilhar o mesmo schemaLocation entre todos os streams",
+      "Nao definir schemaLocation",
+      "Reutilizar o schemaLocation de outra tabela"
+    ],
+    "c": 0,
+    "expl": "Cada stream/tabela alvo deve ter seu proprio schemaLocation (e checkpoint) para rastrear seu schema de forma independente, evitando conflitos de estado entre cargas.",
+    "src": "Docs: Auto Loader separate schema/checkpoint per stream"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e o objeto do UC usado para agrupar e compartilhar um conjunto de dados via Delta Sharing?",
+    "opts": [
+      "Share (e Recipient para o destinatario)",
+      "Volume",
+      "Cluster",
+      "Widget"
+    ],
+    "c": 0,
+    "expl": "No Delta Sharing, um Share e a colecao de objetos a compartilhar, e um Recipient representa o destinatario. O provedor adiciona tabelas/views ao share e concede acesso ao recipient.",
+    "src": "Docs: Delta Sharing shares and recipients"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual comando SQL agrupa dados e aplica uma condicao de filtro sobre os grupos (apos agregacao)?",
+    "opts": [
+      "GROUP BY ... HAVING ...",
+      "GROUP BY ... WHERE ...",
+      "FILTER GROUP BY",
+      "ORDER BY ... HAVING"
+    ],
+    "c": 0,
+    "expl": "HAVING filtra grupos apos a agregacao (ex.: HAVING SUM(valor) > 1000). WHERE filtra linhas antes de agrupar.",
+    "src": "Docs: SQL GROUP BY HAVING"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre a atribuicao de workspaces a metastores no UC e correta?",
+    "opts": [
+      "Um workspace e atribuido a exatamente um metastore (da sua regiao)",
+      "Um workspace pode ter varios metastores simultaneos",
+      "Metastores sao por cluster",
+      "Nao ha relacao entre workspace e metastore"
+    ],
+    "c": 0,
+    "expl": "Cada workspace e atribuido a um unico metastore do UC (da regiao correspondente). Varios workspaces podem compartilhar o mesmo metastore.",
+    "src": "Docs: UC workspace-metastore assignment"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e o efeito de databricks bundle destroy?",
+    "opts": [
+      "Remove do workspace os recursos implantados por aquele bundle/target",
+      "Apaga o codigo-fonte local",
+      "Otimiza tabelas",
+      "Cria um novo job"
+    ],
+    "c": 0,
+    "expl": "databricks bundle destroy remove os recursos que o bundle implantou no target (limpeza de ambiente), sem afetar o codigo-fonte local do projeto.",
+    "src": "Docs: databricks bundle destroy"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e a melhor forma de deduplicar mantendo apenas o registro mais recente por chave em um DataFrame?",
+    "opts": [
+      "Usar row_number() sobre Window.partitionBy(chave).orderBy(ts.desc()) e filtrar rank = 1",
+      "Usar apenas dropDuplicates() sem ordenar",
+      "Usar explode()",
+      "Usar collect_list()"
+    ],
+    "c": 0,
+    "expl": "Para manter o registro mais recente por chave, aplica-se uma window ordenada por timestamp desc, atribui row_number() e filtra == 1. dropDuplicates() sozinho nao garante qual duplicata e mantida.",
+    "src": "Docs: PySpark deduplication with window"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual e a vantagem de usar Lakeflow Connect em vez de construir conectores customizados para ingestao de bancos/SaaS?",
+    "opts": [
+      "Conectores gerenciados, com CDC e menor manutencao, integrados ao lakehouse e ao UC",
+      "E sempre mais lento",
+      "Nao suporta CDC",
+      "Exige exportar para CSV antes"
+    ],
+    "c": 0,
+    "expl": "Lakeflow Connect oferece conectores gerenciados (inclusive CDC) para aplicacoes empresariais e bancos, reduzindo a manutencao de codigo customizado e integrando a ingestao ao lakehouse governado.",
+    "src": "Exam guide: Lakeflow Connect advantages"
+  },
+  {
+    "dom": "gov",
+    "stem": "Qual e o principal objetivo do data lineage para governanca?",
+    "opts": [
+      "Rastreabilidade e analise de impacto: entender origem, dependencias e efeitos de mudancas nos dados",
+      "Acelerar queries",
+      "Compactar arquivos",
+      "Compartilhar dados externamente"
+    ],
+    "c": 0,
+    "expl": "Lineage fornece rastreabilidade (de onde vem os dados), analise de impacto (o que quebra se uma tabela mudar) e apoio a auditoria/compliance - central para governanca de dados.",
+    "src": "Docs: UC lineage purpose"
+  },
+  {
+    "dom": "proc",
+    "stem": "Qual e o comportamento de union() entre dois DataFrames?",
+    "opts": [
+      "Empilha as linhas dos dois DataFrames (que devem ter esquemas compativeis)",
+      "Faz join por chave",
+      "Remove duplicatas automaticamente",
+      "Agrega por grupo"
+    ],
+    "c": 0,
+    "expl": "union() concatena/empilha as linhas de dois DataFrames com esquemas compativeis (por posicao). Nao remove duplicatas (use distinct() depois) nem faz join.",
+    "src": "Docs: PySpark union"
+  },
+  {
+    "dom": "plat",
+    "stem": "Qual afirmacao sobre a relacao entre Delta Lake e o lakehouse e mais precisa?",
+    "opts": [
+      "Delta Lake e a camada de armazenamento transacional que habilita as garantias do lakehouse sobre object storage",
+      "Delta Lake e um agendador de jobs",
+      "Delta Lake substitui o Spark",
+      "Delta Lake e um formato proprietario fechado"
+    ],
+    "c": 0,
+    "expl": "Delta Lake e a camada de storage aberta e transacional (ACID, versionamento, schema) que transforma um data lake em lakehouse, fornecendo confiabilidade e performance sobre object storage.",
+    "src": "Docs: Delta Lake as lakehouse storage layer"
+  },
+  {
+    "dom": "prod",
+    "stem": "Qual e a forma recomendada de implementar CI/CD para pipelines Databricks?",
+    "opts": [
+      "Usar Databricks Asset Bundles versionados em Git com deploy automatizado por ambiente",
+      "Editar tudo manualmente na UI de producao",
+      "Copiar notebooks por e-mail",
+      "Nao versionar nada"
+    ],
+    "c": 0,
+    "expl": "DAB + Git e a abordagem recomendada para CI/CD: recursos como codigo versionado, com validate/deploy automatizados por target (dev/staging/prod), integrando com pipelines de CI (Azure DevOps, GitHub Actions).",
+    "src": "Docs: DAB CI/CD"
+  },
+  {
+    "dom": "dev",
+    "stem": "Qual das opcoes descreve corretamente a interacao entre Auto Loader e LDP?",
+    "opts": [
+      "Auto Loader pode ser usado dentro de pipelines LDP para ingestao incremental, com checkpoint/schema gerenciados pelo pipeline",
+      "Sao mutuamente exclusivos",
+      "LDP nao suporta ingestao de arquivos",
+      "Auto Loader so roda fora de pipelines"
+    ],
+    "c": 0,
+    "expl": "Auto Loader integra-se a pipelines LDP para ingestao incremental de arquivos; nesse contexto, o pipeline gerencia automaticamente schema location e checkpoint, simplificando a configuracao.",
+    "src": "Docs: Auto Loader with LDP"
+  }
+]

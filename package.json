@@ -1,0 +1,22 @@
+{
+  "name": "databricks-de-associate-questions",
+  "version": "1.0.0",
+  "description": "Plataforma interativa de estudo para o exame Databricks Certified Data Engineer Associate",
+  "main": "index.html",
+  "scripts": {
+    "serve": "python -m http.server 8000",
+    "serve:powershell": "python -m http.server 8000"
+  },
+  "keywords": [
+    "databricks",
+    "data-engineer",
+    "study",
+    "exam"
+  ],
+  "author": "Matheus",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/databricks-de-associate.git"
+  }
+}
