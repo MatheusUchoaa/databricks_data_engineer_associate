@@ -5,6 +5,7 @@ dist/
 build/
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 *~

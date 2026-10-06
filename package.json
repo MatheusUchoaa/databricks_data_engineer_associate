@@ -1,22 +1,22 @@
 {
-  "name": "databricks-de-associate-questions",
-  "version": "1.0.0",
-  "description": "Plataforma interativa de estudo para o exame Databricks Certified Data Engineer Associate",
+  "name": "databricks-da-associate-questions",
+  "version": "2.0.0",
+  "description": "Plataforma interativa de estudo para o exame Databricks Certified Data Analyst Associate",
+  "type": "module",
   "main": "index.html",
   "scripts": {
-    "serve": "python -m http.server 8000",
-    "serve:powershell": "python -m http.server 8000"
+    "serve": "python -m http.server 8000 --bind 127.0.0.1"
   },
   "keywords": [
     "databricks",
-    "data-engineer",
+    "data-analyst",
     "study",
     "exam"
   ],
-  "author": "Matheus",
+  "author": "Matheus Uchoa",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/databricks-de-associate.git"
+    "url": "https://github.com/MatheusUchoaa/databricks_data_engineer_associate.git"
   }
 }

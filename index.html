@@ -3,75 +3,146 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Databricks DE Associate — Banco de Questões</title>
+    <title>Databricks DA Associate — Banco de Questões</title>
     <link rel="stylesheet" href="./css/style.css" />
   </head>
   <body>
     <div class="wrap">
       <header>
-        <div class="kick">Databricks Certified Data Engineer Associate</div>
-        <h1>Banco de Estudo — Questões</h1>
+        <div class="kick">Databricks Certified Data Analyst Associate</div>
+        <h1>Banco de Estudo — <span id="total-count">0</span> questões</h1>
         <p>
-          Questões autorais no estilo scenario-based da prova, escritas a
-          partir do guia oficial do exame e da documentação Databricks/Microsoft
-          Learn. Peso reforçado nos seus domínios mais fracos. Filtre, responda
-          e acompanhe seu percentual ao vivo.
+          Questões autorais no estilo scenario-based da prova, escritas a partir
+          do guia oficial do exame e da documentação Databricks/Microsoft Learn.
+          Treine livremente no modo Exercícios ou faça um simulado cronometrado
+          com a mesma distribuição de domínios da prova real.
         </p>
       </header>
 
-      <div class="dash">
-        <div class="stat">
-          <div class="n b" id="s-total">0</div>
-          <div class="l">Na tela</div>
-        </div>
-        <div class="stat">
-          <div class="n" id="s-ans">0</div>
-          <div class="l">Respondidas</div>
-        </div>
-        <div class="stat">
-          <div class="n g" id="s-ok">0</div>
-          <div class="l">Certas</div>
-        </div>
-        <div class="stat">
-          <div class="n r" id="s-bad">0</div>
-          <div class="l">Erradas</div>
-        </div>
-        <div class="stat">
-          <div class="n" id="s-pct">—</div>
-          <div class="l">Acerto</div>
-        </div>
-      </div>
+      <nav class="tabs">
+        <button class="tab on" data-mode="practice">Exercícios</button>
+        <button class="tab" data-mode="exam">Simulado</button>
+      </nav>
 
-      <div class="toolbar">
-        <div class="filters" id="filters"></div>
-      </div>
-      <div class="toolbar" style="margin-top: 2px">
-        <button class="btn" onclick="shuffleQ()">Embaralhar</button>
-        <button class="btn" onclick="revealAll()">Revelar todas</button>
-        <button class="btn brand" onclick="resetAll()">Reiniciar</button>
-        <span style="flex: 1"></span>
-        <span style="font-size: 12px; color: var(--ink-soft)" id="filterlabel"
-          ></span>
-      </div>
+      <!-- ===== Modo Exercícios ===== -->
+      <section id="practice">
+        <div class="dash">
+          <div class="stat">
+            <div class="n b" id="s-total">0</div>
+            <div class="l">Na tela</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="s-ans">0</div>
+            <div class="l">Respondidas</div>
+          </div>
+          <div class="stat">
+            <div class="n g" id="s-ok">0</div>
+            <div class="l">Certas</div>
+          </div>
+          <div class="stat">
+            <div class="n r" id="s-bad">0</div>
+            <div class="l">Erradas</div>
+          </div>
+          <div class="stat">
+            <div class="n" id="s-pct">—</div>
+            <div class="l">Acerto</div>
+          </div>
+        </div>
 
-      <div class="note">
-        Nomenclatura atual: <b>DLT → Lakeflow Declarative Pipelines (LDP)</b> e
-        <b>Databricks Repos → Git Folders</b>. As questões usam os termos novos.
-        Confirme sempre na documentação vigente antes da prova, pois a plataforma
-        evolui.
-      </div>
+        <div class="toolbar">
+          <div class="filters" id="filters"></div>
+        </div>
 
-      <div id="quiz"></div>
-      <div class="empty" id="empty" style="display: none">
-        Nenhuma questão neste filtro.
-      </div>
+        <div class="toolbar" style="margin-top: 2px">
+          <button class="btn" id="btn-shuffle">Embaralhar</button>
+          <button class="btn" id="btn-reveal">Revelar todas</button>
+          <button class="btn brand" id="btn-reset">Reiniciar</button>
+          <span style="flex: 1"></span>
+          <span style="font-size: 12px; color: var(--ink-soft)" id="filterlabel"></span>
+        </div>
+
+        <div class="note">
+          Nomenclatura atual: <b>dashboards do DBSQL → AI/BI Dashboards</b> e
+          <b>Genie → AI/BI Genie spaces</b>. As questões usam os termos novos.
+          Confirme sempre na documentação vigente antes da prova, pois a
+          plataforma evolui.
+        </div>
+
+        <div id="quiz"></div>
+        <div class="empty" id="empty" style="display: none">
+          Nenhuma questão neste filtro.
+        </div>
+      </section>
+
+      <!-- ===== Modo Simulado ===== -->
+      <section id="exam" class="hidden">
+        <!-- Tela 1: instruções -->
+        <div id="exam-intro">
+          <div class="exam-hero">
+            <h2>Simulado cronometrado</h2>
+            <p>
+              45 questões em 90 minutos, sorteadas na mesma proporção de
+              domínios da prova oficial. Sem feedback durante a prova — o
+              gabarito e a revisão completa aparecem só no final.
+            </p>
+            <div class="exam-facts">
+              <div><b>45</b><span>questões</span></div>
+              <div><b>90</b><span>minutos</span></div>
+              <div><b>70%</b><span>corte de referência</span></div>
+            </div>
+          </div>
+
+          <h3 class="sec">Distribuição por domínio</h3>
+          <div class="blueprint" id="exam-blueprint"></div>
+
+          <div class="note">
+            A Databricks não publica a nota de corte oficial; 70% é a referência
+            usada no mercado. Cada simulado sorteia um conjunto novo de questões.
+          </div>
+
+          <div class="toolbar" style="justify-content: center; margin-top: 20px">
+            <button class="btn brand big" id="exam-start">Iniciar simulado</button>
+          </div>
+        </div>
+
+        <!-- Tela 2: prova em andamento -->
+        <div id="exam-run" class="hidden">
+          <div class="exam-bar">
+            <div class="clock" id="exam-clock">90:00</div>
+            <div class="exam-prog">
+              <span id="exam-progress">Questão 1 de 45</span>
+              <div class="track"><div class="fill" id="exam-bar"></div></div>
+            </div>
+            <button class="btn" id="exam-finish">Finalizar</button>
+          </div>
+
+          <div class="q" id="exam-card"></div>
+
+          <div class="exam-nav">
+            <button class="btn" id="exam-prev">Anterior</button>
+            <button class="btn flagbtn" id="exam-flag">Marcar para revisão</button>
+            <button class="btn" id="exam-next">Próxima</button>
+          </div>
+
+          <h3 class="sec">Navegação</h3>
+          <div class="grid" id="exam-grid"></div>
+          <div class="legend">
+            <span><i class="sw done"></i> respondida</span>
+            <span><i class="sw flag"></i> marcada</span>
+            <span><i class="sw now"></i> atual</span>
+          </div>
+        </div>
+
+        <!-- Tela 3: resultado -->
+        <div id="exam-result" class="hidden"></div>
+      </section>
 
       <footer>
         Questões autorais para estudo · não são itens reais do exame · baseadas
-        no exam guide oficial (25/jul/2025) + docs Databricks/Microsoft Learn
+        no exam guide oficial do Data Analyst Associate + docs Databricks/Microsoft Learn
       </footer>
     </div>
 
-    <script src="./js/app.js"></script>
+    <script type="module" src="./js/app.js"></script>
   </body>
 </html>
